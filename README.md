@@ -2,7 +2,7 @@
 A drop in replacement for golang/crypto/ed25519 with additional functionality
 
 # SignExt
-SignExt signs the message with privateKey and returns a signature that can be verified using Verify(). The signature supports public key extraction using ExtractPublicKey()
+SignExt signs the message with privateKey and returns a signature that can be verified using Verify(), if the public key in known. However, the main advantage of this scheme is that it supports public-key extraction using ExtractPublicKey().
 
 ```go
 func SignExt(privateKey PrivateKey, message []byte) []byte
