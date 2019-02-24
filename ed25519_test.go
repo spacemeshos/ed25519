@@ -16,7 +16,6 @@ import (
 	"testing"
 
 	"github.com/spacemeshos/ed25519/internal/edwards25519"
-
 )
 
 type zeroReader struct{}
