@@ -17,6 +17,8 @@ func ExtractPublicKey(message, sig []byte) PublicKey {
 		panic("ed25519: bad signature length: " + strconv.Itoa(l))
 	}
 
+	// todo: implement me
+
 	pubKey := make([]byte, PublicKeySize)
 	return pubKey
 }
@@ -30,6 +32,8 @@ func SignExt(privateKey PrivateKey, message []byte) []byte {
 	if l := len(privateKey); l != PrivateKeySize {
 		panic("ed25519: bad private key length: " + strconv.Itoa(l))
 	}
+
+	// todo: modify me with the updated sign algo from research
 
 	h := sha512.New()
 	h.Write(privateKey[:32])
