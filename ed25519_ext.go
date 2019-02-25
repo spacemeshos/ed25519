@@ -17,7 +17,7 @@ import (
 func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 
 	if l := len(sig); l != SignatureSize || sig[63]&224 != 0 {
-		return nil, errors.New("ed25519: bad signature length: " + strconv.Itoa(l))
+		return nil, errors.New("ed25519: bad signature format")
 	}
 
 	h := sha512.New()
@@ -25,7 +25,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	//h.Write(publicKey[:])
 	h.Write(message)
 	var digest [64]byte
-	h.Sum(digest[:0]) // obtain the value h
+	h.Sum(digest[:0])
 
 	var hReduced [32]byte
 	edwards25519.ScReduce(&hReduced, &digest)
@@ -34,11 +34,10 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	// todo: WE NEED INVERSION MOD L
 	// where l = 2^252 + 27742317777372353535851937790883648493
 	// invert(x) := x^(l-2) % l
-	// edwards25519.InvertModL(&hInv, &hReduced)					// obtain inverse of h
+	// edwards25519.InvertModL(&hInv, &hReduced)
 
 	// var hInVReduced [32]byte
-	// edwards25519.ScReduce(&hInVReduced, &hInv)					// work mod l - need to think if this is necessary
-
+	// edwards25519.ScReduce(&hInVReduced, &hInv)
 	var R edwards25519.ProjectiveGroupElement
 	var s [32]byte
 	copy(s[:], sig[32:])
@@ -60,7 +59,8 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	edwards25519.GeDoubleScalarMultVartime(&R, &buff, &sig[:32], &s)
 	var EC_PK [32]byte
 
-	// Doc of curve25519 says point are given by x-coor. https://github.com/golang/crypto/blob/master/curve25519/doc.go
+	// Doc of curve25519 says point are given by x-coord.
+	// https://github.com/golang/crypto/blob/master/curve25519/doc.go
 	curve25519.ScalarMult(&EC_PK, &hInv, &R)
 
 	pubKey := make([]byte, PublicKeySize)
@@ -72,7 +72,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 }
 
 // SignExt signs the message with privateKey and returns a signature.
-// The siganture may be verified using Verify(), if the signer's public key is known.
+// The signature may be verified using Verify(), if the signer's public key is known.
 // The signature returned by this method can be used together with the message
 // to extract the public key using ExtractPublicKey()
 // It will panic if len(privateKey) is not PrivateKeySize.
@@ -84,7 +84,12 @@ func SignExt(privateKey PrivateKey, message []byte) []byte {
 	}
 
 	h := sha512.New()
-	h.Write(privateKey[:32]) // privateKey follows from NewKeyFromSeed(); it seems that the first 32 bytes is 'a' as in line 2 in "Algorithm 1", and the last 32 bytes is the (encoding) of the public key (elliptic curve point, as in line 4 in "Algorithm 1").
+
+	// privateKey follows from NewKeyFromSeed();
+	// it seems that the first 32 bytes is 'a' as in line 2 in "Algorithm 1",
+	// and the last 32 bytes is the (encoding) of the public key (elliptic curve point,
+	// as in line 4 in "Algorithm 1").
+	h.Write(privateKey[:32])
 
 	var digest1, messageDigest, hramDigest [64]byte
 	var expandedSecretKey [32]byte
@@ -95,9 +100,14 @@ func SignExt(privateKey PrivateKey, message []byte) []byte {
 	expandedSecretKey[31] |= 64 // this is the final value for 'a'
 
 	h.Reset()
-	h.Write(digest1[32:]) // this seems to be 'b' as in line 3 in "Algorithm 1", however it seems that it is obtained by hashing of (non-final 'a'), rather by the way it is described in "Algorithm 1"
+	// This seems to be 'b' as in line 3 in "Algorithm 1",
+	// however it seems that it is obtained by hashing of (non-final 'a'),
+	// rather by the way it is described in "Algorithm 1"
+	h.Write(digest1[32:])
 	h.Write(message)
-	h.Sum(messageDigest[:0]) // line 5 in "Algorithm 1": creates r
+
+	// line 5 in "Algorithm 1": creates r
+	h.Sum(messageDigest[:0])
 
 	var messageDigestReduced [32]byte
 	edwards25519.ScReduce(&messageDigestReduced, &messageDigest) // looks like reduction mod l, this is the final r
@@ -109,14 +119,22 @@ func SignExt(privateKey PrivateKey, message []byte) []byte {
 
 	h.Reset()
 	h.Write(encodedR[:])
-	//h.Write(privateKey[32:])						// we remove the public key from the hash
-	h.Write(message)
-	h.Sum(hramDigest[:0]) // line 7: creates h
-	var hramDigestReduced [32]byte
-	edwards25519.ScReduce(&hramDigestReduced, &hramDigest) // this is the final h
 
+	// we remove the public key from the hash
+	//h.Write(privateKey[32:])
+
+	// line 7: creates h
+	h.Write(message)
+	h.Sum(hramDigest[:0])
+
+	var hramDigestReduced [32]byte
+
+	// this is the final h
+	edwards25519.ScReduce(&hramDigestReduced, &hramDigest)
+
+	// line 8: s = h*a + r
 	var s [32]byte
-	edwards25519.ScMulAdd(&s, &hramDigestReduced, &expandedSecretKey, &messageDigestReduced) // line 8: s = h*a + r
+	edwards25519.ScMulAdd(&s, &hramDigestReduced, &expandedSecretKey, &messageDigestReduced)
 
 	signature := make([]byte, SignatureSize)
 	copy(signature[:], encodedR[:])
