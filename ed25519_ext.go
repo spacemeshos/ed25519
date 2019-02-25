@@ -33,12 +33,27 @@ func ExtractPublicKey(message, sig []byte) PublicKey {
 	edwards25519.ScReduce(&hReduced, &digest)
 	
 	var hInv [32]byte
-	edwards25519.FeInvert(&hInv, &hReduced)					// obtain inverse of h; that inverse in what field? Hopefully this just works
+	edwards25519.FeInvert(&hInv, &hReduced)					// obtain inverse of h; THIS IS WRONG - we need new inversion
 
 	var hInVReduced [32]byte
 	edwards25519.ScReduce(&hInvReduced, &hInv)				// work mod l - need to think if this is necessary
 	
+	var R edwards25519.ProjectiveGroupElement
+	var s [32]byte
+	copy(s[:], sig[32:])
+
+	// https://tools.ietf.org/html/rfc8032#section-5.1.7 requires that s be in
+	// the range [0, order) in order to prevent signature malleability.
+	if !edwards25519.ScMinimal(&s) {
+		return false
+	}
+
 	// NEXT: extract R as a point on the curve and compute the inverse of R, sig[32:] --- I'm stuck with that
+	var SB [32]byte
+	//edwards25519.GeScalarMultBase(&SB,&s)
+	edwards25519.GeDoubleScalarMultVartime(&R, &1, &sig[:32], &s)		// First we try without negation ; 1 means the number one?
+	var EC_PK [32]byte
+	dwards25519.POINT-MULTIPLICATION(&EC_Pk,&hInVReduced,&R)		// WE DON'T HAVE POINT MULT PROCEDURE
 	
 	pubKey := make([]byte, PublicKeySize)
 	return pubKey
