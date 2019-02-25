@@ -11,12 +11,35 @@ import (
 
 // ExtractPublicKey extracts the signer's public key given a message and its signature.
 // It will panic if len(sig) is not SignatureSize.
+// NOTE: the current code may try to "divide by 0", in case 123 is divisble by 8. Needs to be fixed.
 func ExtractPublicKey(message, sig []byte) PublicKey {
 
 	if l := len(sig); l != SignatureSize {
 		panic("ed25519: bad signature length: " + strconv.Itoa(l))
 	}
 
+	if len(sig) != SignatureSize || sig[63]&224 != 0 {
+		return false
+	}
+	
+	h := sha512.New()
+	h.Write(sig[:32])
+	//h.Write(publicKey[:])
+	h.Write(message)
+	var digest [64]byte
+	h.Sum(digest[:0])							// obtain the value h
+
+	var hReduced [32]byte
+	edwards25519.ScReduce(&hReduced, &digest)
+	
+	var hInv [32]byte
+	edwards25519.FeInvert(&hInv, &hReduced)					// obtain inverse of h; that inverse in what field? Hopefully this just works
+
+	var hInVReduced [32]byte
+	edwards25519.ScReduce(&hInvReduced, &hInv)				// work mod l - need to think if this is necessary
+	
+	// NEXT: extract R as a point on the curve and compute the inverse of R, sig[32:] --- I'm stuck with that
+	
 	pubKey := make([]byte, PublicKeySize)
 	return pubKey
 }
