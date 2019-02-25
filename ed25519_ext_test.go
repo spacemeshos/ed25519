@@ -15,11 +15,15 @@ func TestPublicKeyExtraction(t *testing.T) {
 	message := []byte("test message")
 	sig := SignExt(private, message)
 
-	public1 := ExtractPublicKey(message, sig)
+	public1, err := ExtractPublicKey(message, sig)
+
+	assert.NoError(t, err)
 	assert.EqualValues(t, public, public1, "expected same public key")
 
 	wrongMessage := []byte("wrong message")
-	public2 := ExtractPublicKey(wrongMessage, sig)
+	public2, err := ExtractPublicKey(wrongMessage, sig)
+
+	assert.NoError(t, err)
 	if bytes.Compare(public, public2) == 0 {
 		t.Errorf("expected different public keys")
 	}
@@ -52,7 +56,7 @@ func BenchmarkPublicKeyExtraction(b *testing.B) {
 	sig := SignExt(priv, message)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		ExtractPublicKey(message, sig)
+		_, _ = ExtractPublicKey(message, sig)
 	}
 }
 
