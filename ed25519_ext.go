@@ -33,7 +33,9 @@ func ExtractPublicKey(message, sig []byte) PublicKey {
 	edwards25519.ScReduce(&hReduced, &digest)
 	
 	var hInv [32]byte
-	edwards25519.FeInvert(&hInv, &hReduced)					// obtain inverse of h; THIS IS WRONG - we need new inversion
+	// WE NEED INVERSION MOD L
+	// where l = 2^252 + 27742317777372353535851937790883648493
+	edwards25519.InvertMod_l(&hInv, &hReduced)					// obtain inverse of h
 
 	var hInVReduced [32]byte
 	edwards25519.ScReduce(&hInvReduced, &hInv)				// work mod l - need to think if this is necessary
@@ -53,9 +55,12 @@ func ExtractPublicKey(message, sig []byte) PublicKey {
 	//edwards25519.GeScalarMultBase(&SB,&s)
 	edwards25519.GeDoubleScalarMultVartime(&R, &1, &sig[:32], &s)		// First we try without negation ; 1 means the number one?
 	var EC_PK [32]byte
-	dwards25519.POINT-MULTIPLICATION(&EC_Pk,&hInVReduced,&R)		// WE DON'T HAVE POINT MULT PROCEDURE
+	curve25519.scalarMult(&EC_PK,&hInVReduced,&R)				// Doc of curve25519 says point are given by x-coor. https://github.com/golang/crypto/blob/master/curve25519/doc.go
 	
+	// EC_PK is supposed to be the (x-coordinate of the) public key as an elliptic curve point
+	// I think that we need to obtain the full point, so we can apply ToBytes below
 	pubKey := make([]byte, PublicKeySize)
+	EC_PK.ToBytes(&pubKey)
 	return pubKey
 }
 
