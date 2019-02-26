@@ -16,7 +16,6 @@ func TestInvertModL(t *testing.T) {
 	var x, out [32]byte
 	x[0] = byte(0x2)
 	InvertModL(&out, &x)
-
 	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(out[:]))
 	fmt.Printf("As an int: %s\n", ToBigInt(out[:]).String())
 }
