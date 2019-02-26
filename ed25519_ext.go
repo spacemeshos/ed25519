@@ -7,12 +7,8 @@ import (
 	"crypto/sha512"
 	"errors"
 	"github.com/spacemeshos/ed25519/internal/edwards25519"
-	"golang.org/x/crypto/curve25519"
 	"strconv"
 )
-
-
-
 
 // ExtractPublicKey extracts the signer's public key given a message and its signature.
 // It will panic if len(sig) is not SignatureSize.
@@ -33,7 +29,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	var hReduced [32]byte
 	edwards25519.ScReduce(&hReduced, &digest)
 
-	var hInv [32]byte
+	// var hInv [32]byte
 	// todo: WE NEED INVERSION MOD L
 	// where l = 2^252 + 27742317777372353535851937790883648493
 	// invert(x) := x^(l-2) % l
@@ -41,7 +37,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 
 	// var hInVReduced [32]byte
 	// edwards25519.ScReduce(&hInVReduced, &hInv)
-	var R edwards25519.ProjectiveGroupElement
+	// var R edwards25519.ProjectiveGroupElement
 	var s [32]byte
 	copy(s[:], sig[32:])
 
@@ -59,12 +55,12 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	edwards25519.GeScalarMultBase(&SB, &s)
 
 	// First we try without negation ; 1 means the number one?
-	edwards25519.GeDoubleScalarMultVartime(&R, &buff, &sig[:32], &s)
-	var EC_PK [32]byte
+	// edwards25519.GeDoubleScalarMultVartime(&R, &buff, &sig[:32], &s)
+	// var EC_PK [32]byte
 
 	// Doc of curve25519 says point are given by x-coord.
 	// https://github.com/golang/crypto/blob/master/curve25519/doc.go
-	curve25519.ScalarMult(&EC_PK, &hInv, &R)
+	// curve25519.ScalarMult(&EC_PK, &hInv, &R)
 
 	pubKey := make([]byte, PublicKeySize)
 
@@ -150,54 +146,49 @@ func SignExt(privateKey PrivateKey, message []byte) []byte {
 
 func InvertModL(out, z *[32]byte) {
 
-	// @barak: t1 is unused - do we need it?
-	var t0, t1, t2, t3, t4, t5, tz [32]byte	// This function is not optimized
+	var t0, t2, t3, t4, t5, tz [32]byte // This function is not optimized
 	var i int
 
+	// go uses zero-values so the array should be all 0s by default
+	// because the zero value of a byte is 0x0
 	var zero [32]byte
-	// zero[0] = byte(0)
-	
+
 	// copy(t1, z)					// 2^0  I'm actually not using it
 
-	edwards25519.ScMulAdd(&t0, z, z, &zero)	// 2^1
-	edwards25519.ScMulAdd(&t2, &t0, z, &zero)	// 2^1 + 2^0
-	for i = 1; i < 2; i++ { 			// 2^2
+	edwards25519.ScMulAdd(&t0, z, z, &zero)   // 2^1
+	edwards25519.ScMulAdd(&t2, &t0, z, &zero) // 2^1 + 2^0
+	for i = 1; i < 2; i++ {                   // 2^2
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
-	edwards25519.ScMulAdd(&t3, &t0, &t2, &zero)	// 2^2 + 2^1 + 2^0
-	for i = 1; i < 2; i++ { 			// 2^3
+	edwards25519.ScMulAdd(&t3, &t0, &t2, &zero) // 2^2 + 2^1 + 2^0
+	for i = 1; i < 2; i++ {                     // 2^3
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
-	edwards25519.ScMulAdd(&t4, &t0, &t3, &zero)	// 2^3 + 2^2 + 2^1 + 2^0
-	for i = 1; i < 2; i++ { 			// 2^4
+	edwards25519.ScMulAdd(&t4, &t0, &t3, &zero) // 2^3 + 2^2 + 2^1 + 2^0
+	for i = 1; i < 2; i++ {                     // 2^4
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
-	edwards25519.ScMulAdd(&t5, &t0, &t4, &zero)	// 2^4 + 2^3 + 2^2 + 2^1 + 2^0
+	edwards25519.ScMulAdd(&t5, &t0, &t4, &zero) // 2^4 + 2^3 + 2^2 + 2^1 + 2^0
 
-	// @barak: what are we trying to do here? set tz to 0 or to 1 ?
-	copy(tz[:], z[:])					// tz = 2^0
-	copy(t0[:], z[:])
+	copy(tz[:], z[:]) // tz = 2^0
+	// copy(t0[:], z[:])
 
-
-
-	for i = 1; i < 3; i++ { 			// 2^2
+	for i = 1; i < 3; i++ { // 2^2
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
-	edwards25519.ScMulAdd(&tz, &t0, &tz, &zero)	// tz = 2^2 + 2^0
-	for i = 1; i < 6; i++ { 			// 2^6 + 2^5
+	edwards25519.ScMulAdd(&tz, &t0, &tz, &zero) // tz = 2^2 + 2^0
+	for i = 1; i < 6; i++ {                     // 2^6 + 2^5
 		edwards25519.ScMulAdd(&t0, &t2, &t2, &zero)
 	}
-	edwards25519.ScMulAdd(&tz, &t0, &tz, &zero)	// tz = 2^6 + 2^5 + 2^2 + 2^0
-	for i = 1; i < 9; i++ { 			// 2^11 + 2^10 + 2^9 + 2^8
+	edwards25519.ScMulAdd(&tz, &t0, &tz, &zero) // tz = 2^6 + 2^5 + 2^2 + 2^0
+	for i = 1; i < 9; i++ {                     // 2^11 + 2^10 + 2^9 + 2^8
 		edwards25519.ScMulAdd(&t0, &t4, &t4, &zero)
 	}
-	edwards25519.ScMulAdd(&tz, &t0, &tz, &zero)	// tz = 2^11 + 2^10 + 2^9 + 2^8 + 2^6 + 2^5 + 2^2 + 2^0
-	
+	edwards25519.ScMulAdd(&tz, &t0, &tz, &zero) // tz = 2^11 + 2^10 + 2^9 + 2^8 + 2^6 + 2^5 + 2^2 + 2^0
+
 	// if you input z=2, we get 2^(2048 + 1024 + 512 + 256 + 64 + 32 + 4 + 1) = 2^3941 mod l
-	//                         = 4390054613844824731020805728162554857567810442668694040812122513881566113753
-	
+	// = 4390054613844824731020805728162554857567810442668694040812122513881566113753
 	copy(out[:], tz[:])
-	
 
 	//for i = 1; i < 252; i++ { 			// 2^252
 	//	edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
