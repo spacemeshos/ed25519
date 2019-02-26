@@ -150,15 +150,15 @@ func InvertModL(out, z *[32]byte) {
 
 	edwards25519.ScMulAdd(&t0, z, z, &zero)   // 2^1
 	edwards25519.ScMulAdd(&t2, &t0, z, &zero) // 2^1 + 2^0
-	for i := 1; i < 2; i++ {                   // 2^2
+	for i := 1; i < 2; i++ {                  // 2^2
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
 	edwards25519.ScMulAdd(&t3, &t0, &t2, &zero) // 2^2 + 2^1 + 2^0
-	for i := 1; i < 2; i++ {                     // 2^3
+	for i := 1; i < 2; i++ {                    // 2^3
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
 	edwards25519.ScMulAdd(&t4, &t0, &t3, &zero) // 2^3 + 2^2 + 2^1 + 2^0
-	for i := 1; i < 2; i++ {                     // 2^4
+	for i := 1; i < 2; i++ {                    // 2^4
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
 	edwards25519.ScMulAdd(&t5, &t0, &t4, &zero) // 2^4 + 2^3 + 2^2 + 2^1 + 2^0
@@ -171,12 +171,13 @@ func InvertModL(out, z *[32]byte) {
 	}
 	edwards25519.ScMulAdd(&tz, &t0, &tz, &zero) // tz = 2^2 + 2^0
 	copy(t0[:], t2[:])
-	for i := 1; i < 6; i++ {                     // 2^6 + 2^5
+	for i := 1; i < 6; i++ { // 2^6 + 2^5
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
 	edwards25519.ScMulAdd(&tz, &t0, &tz, &zero) // tz = 2^6 + 2^5 + 2^2 + 2^0
+
 	copy(t0[:], t4[:])
-	for i := 1; i < 9; i++ {                     // 2^11 + 2^10 + 2^9 + 2^8
+	for i := 1; i < 9; i++ { // 2^11 + 2^10 + 2^9 + 2^8
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
 	edwards25519.ScMulAdd(&tz, &t0, &tz, &zero) // tz = 2^11 + 2^10 + 2^9 + 2^8 + 2^6 + 2^5 + 2^2 + 2^0

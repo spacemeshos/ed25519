@@ -17,21 +17,21 @@ func TestInvertModL(t *testing.T) {
 	x[0] = byte(0x2)
 	InvertModL(&out, &x)
 	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(out[:]))
-	fmt.Printf("As an int: %s\n", ToBigInt(out[:]).String())
+	fmt.Printf("Int value: %s\n", ToInt(out[:]).String())
 }
 
-// Returns 256^0*b[0]+256^1*b[1]+...+256^31*b[len(b)-1]
-func ToBigInt(b []byte) *big.Int {
+// ToInt returns 256^0*b[0]+256^1*b[1]+...+256^31*b[len(b)-1]
+func ToInt(b []byte) *big.Int {
 	l := len(b)
 	res := big.NewInt(0)
 	mul := big.NewInt(0)
 	c := big.NewInt(256)
 	t := big.NewInt(0)
 
-	for i:=0; i < l; i ++ {
+	for i := 0; i < l; i++ {
 
 		// 256^i
-		mul = mul.Exp(c, big.NewInt(int64(i)),nil)
+		mul = mul.Exp(c, big.NewInt(int64(i)), nil)
 
 		// res[i] = 256^i * bytes[i]
 		data := big.NewInt(int64(b[i]))
