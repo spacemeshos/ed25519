@@ -5,11 +5,21 @@ package ed25519
 
 import (
 	"crypto/sha512"
+	"encoding/binary"
 	"errors"
 	"github.com/spacemeshos/ed25519/internal/edwards25519"
 	"golang.org/x/crypto/curve25519"
+	"math"
 	"strconv"
 )
+
+var L = uint64(math.Pow(2,252)) + 27742317777372353535851937790883648493
+
+
+func invertModL(x *[32]byte, r *[32]byte) {
+	v := binary.LittleEndian.Uint64(x[:])
+
+}
 
 // ExtractPublicKey extracts the signer's public key given a message and its signature.
 // It will panic if len(sig) is not SignatureSize.
