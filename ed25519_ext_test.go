@@ -5,6 +5,8 @@ package ed25519
 
 import (
 	"bytes"
+	"encoding/hex"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"math/big"
 	"testing"
@@ -15,11 +17,11 @@ func TestInvertModL(t *testing.T) {
 	x[0] = byte(0x2)
 	InvertModL(&out, &x)
 
-	println("Hex string: %x", out[:])
-	println("As an int: %s", ToBigInt(out[:]).String())
+	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(out[:]))
+	fmt.Printf("As an int: %s\n", ToBigInt(out[:]).String())
 }
 
-// Returns b[0]+256*b[1]+...+256^31*b[len(b)-1]
+// Returns 256^0*b[0]+256^1*b[1]+...+256^31*b[len(b)-1]
 func ToBigInt(b []byte) *big.Int {
 	l := len(b)
 	res := big.NewInt(0)
@@ -31,9 +33,9 @@ func ToBigInt(b []byte) *big.Int {
 
 		// 256^i
 		mul = mul.Exp(c, big.NewInt(int64(i)),nil)
-		data := big.NewInt(int64(b[i]))
 
 		// res[i] = 256^i * bytes[i]
+		data := big.NewInt(int64(b[i]))
 		t = t.Mul(data, mul)
 		res = res.Add(res, t)
 	}
