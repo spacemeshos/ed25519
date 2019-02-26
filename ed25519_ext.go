@@ -170,12 +170,14 @@ func InvertModL(out, z *[32]byte) {
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
 	edwards25519.ScMulAdd(&tz, &t0, &tz, &zero) // tz = 2^2 + 2^0
+	copy(t0[:], t2[:])
 	for i := 1; i < 6; i++ {                     // 2^6 + 2^5
-		edwards25519.ScMulAdd(&t0, &t2, &t2, &zero)
+		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
 	edwards25519.ScMulAdd(&tz, &t0, &tz, &zero) // tz = 2^6 + 2^5 + 2^2 + 2^0
+	copy(t0[:], t4[:])
 	for i := 1; i < 9; i++ {                     // 2^11 + 2^10 + 2^9 + 2^8
-		edwards25519.ScMulAdd(&t0, &t4, &t4, &zero)
+		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
 	edwards25519.ScMulAdd(&tz, &t0, &tz, &zero) // tz = 2^11 + 2^10 + 2^9 + 2^8 + 2^6 + 2^5 + 2^2 + 2^0
 
