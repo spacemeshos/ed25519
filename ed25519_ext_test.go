@@ -15,8 +15,8 @@ func TestInvertModL(t *testing.T) {
 	x[0] = byte(0x2)
 	InvertModL(&out, &x)
 
-	println("%x", out[:])
-	println("%s", ToBigInt(out[:]).String())
+	println("Hex string: %x", out[:])
+	println("As an int: %s", ToBigInt(out[:]).String())
 }
 
 // Returns b[0]+256*b[1]+...+256^31*b[len(b)-1]
@@ -30,9 +30,7 @@ func ToBigInt(b []byte) *big.Int {
 	for i:=0; i < l; i ++ {
 
 		// 256^i
-		mul = mul.Exp(big.NewInt(int64(i)), c, nil)
-
-		// treat each byte as a bigEndian int
+		mul = mul.Exp(c, big.NewInt(int64(i)),nil)
 		data := big.NewInt(int64(b[i]))
 
 		// res[i] = 256^i * bytes[i]
