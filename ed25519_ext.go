@@ -5,21 +5,14 @@ package ed25519
 
 import (
 	"crypto/sha512"
-	"encoding/binary"
 	"errors"
 	"github.com/spacemeshos/ed25519/internal/edwards25519"
 	"golang.org/x/crypto/curve25519"
-	"math"
 	"strconv"
 )
 
-var L = uint64(math.Pow(2,252)) + 27742317777372353535851937790883648493
 
 
-func invertModL(x *[32]byte, r *[32]byte) {
-	v := binary.LittleEndian.Uint64(x[:])
-
-}
 
 // ExtractPublicKey extracts the signer's public key given a message and its signature.
 // It will panic if len(sig) is not SignatureSize.
@@ -153,16 +146,21 @@ func SignExt(privateKey PrivateKey, message []byte) []byte {
 	return signature
 }
 
+// I am not sure  what type, if any, we should declare for the input z
 
-func InvertModL(out, z *FieldElement) {			// I am not sure  what type, if any, we should declare for the input z
-	var t0, t1, t2, t3, t4, t5, tz FieldElement	// This function is not optimized
+func InvertModL(out, z *[32]byte) {
+
+	// @barak: t1 is unused - do we need it?
+	var t0, t1, t2, t3, t4, t5, tz [32]byte	// This function is not optimized
 	var i int
+
 	var zero [32]byte
-	buff[0] = byte(0)
+	// zero[0] = byte(0)
 	
-	copy(t1, z)					// 2^0  I'm actually not using it
-	edwards25519.ScMulAdd(&t0, &z, &z, &zero)	// 2^1
-	edwards25519.ScMulAdd(&t2, &t0, &z, &zero)	// 2^1 + 2^0
+	// copy(t1, z)					// 2^0  I'm actually not using it
+
+	edwards25519.ScMulAdd(&t0, z, z, &zero)	// 2^1
+	edwards25519.ScMulAdd(&t2, &t0, z, &zero)	// 2^1 + 2^0
 	for i = 1; i < 2; i++ { 			// 2^2
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
@@ -175,9 +173,13 @@ func InvertModL(out, z *FieldElement) {			// I am not sure  what type, if any, w
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
 	edwards25519.ScMulAdd(&t5, &t0, &t4, &zero)	// 2^4 + 2^3 + 2^2 + 2^1 + 2^0
-	
-	copy(tz, z)					// tz = 2^0
-	copy(t0, z)
+
+	// @barak: what are we trying to do here? set tz to 0 or to 1 ?
+	copy(tz[:], z[:])					// tz = 2^0
+	copy(t0[:], z[:])
+
+
+
 	for i = 1; i < 3; i++ { 			// 2^2
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
@@ -191,19 +193,14 @@ func InvertModL(out, z *FieldElement) {			// I am not sure  what type, if any, w
 	}
 	edwards25519.ScMulAdd(&tz, &t0, &tz, &zero)	// tz = 2^11 + 2^10 + 2^9 + 2^8 + 2^6 + 2^5 + 2^2 + 2^0
 	
-		// if you input z=2, we get 2^(2048 + 1024 + 512 + 256 + 64 + 32 + 4 + 1) = 2^3941 mod l
-		//                         = 4390054613844824731020805728162554857567810442668694040812122513881566113753
+	// if you input z=2, we get 2^(2048 + 1024 + 512 + 256 + 64 + 32 + 4 + 1) = 2^3941 mod l
+	//                         = 4390054613844824731020805728162554857567810442668694040812122513881566113753
 	
-	copy(out, tz)
+	copy(out[:], tz[:])
 	
-	
-	
-	
+
 	//for i = 1; i < 252; i++ { 			// 2^252
 	//	edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	//}
-	
-	
-	
-	
+
 }
