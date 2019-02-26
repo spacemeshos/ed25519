@@ -142,3 +142,58 @@ func SignExt(privateKey PrivateKey, message []byte) []byte {
 
 	return signature
 }
+
+
+func InvertModL(out, z *FieldElement) {			// I am not sure  what type, if any, we should declare for the input z
+	var t0, t1, t2, t3, t4, t5, tz FieldElement	// This function is not optimized
+	var i int
+	var zero [32]byte
+	buff[0] = byte(0)
+	
+	copy(t1, z)					// 2^0  I'm actually not using it
+	edwards25519.ScMulAdd(&t0, &z, &z, &zero)	// 2^1
+	edwards25519.ScMulAdd(&t2, &t0, &z, &zero)	// 2^1 + 2^0
+	for i = 1; i < 2; i++ { 			// 2^2
+		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
+	}
+	edwards25519.ScMulAdd(&t3, &t0, &t2, &zero)	// 2^2 + 2^1 + 2^0
+	for i = 1; i < 2; i++ { 			// 2^3
+		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
+	}
+	edwards25519.ScMulAdd(&t4, &t0, &t3, &zero)	// 2^3 + 2^2 + 2^1 + 2^0
+	for i = 1; i < 2; i++ { 			// 2^4
+		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
+	}
+	edwards25519.ScMulAdd(&t5, &t0, &t4, &zero)	// 2^4 + 2^3 + 2^2 + 2^1 + 2^0
+	
+	copy(tz, z)					// tz = 2^0
+	copy(t0, z)
+	for i = 1; i < 3; i++ { 			// 2^2
+		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
+	}
+	edwards25519.ScMulAdd(&tz, &t0, &tz, &zero)	// tz = 2^2 + 2^0
+	for i = 1; i < 6; i++ { 			// 2^6 + 2^5
+		edwards25519.ScMulAdd(&t0, &t2, &t2, &zero)
+	}
+	edwards25519.ScMulAdd(&tz, &t0, &tz, &zero)	// tz = 2^6 + 2^5 + 2^2 + 2^0
+	for i = 1; i < 9; i++ { 			// 2^11 + 2^10 + 2^9 + 2^8
+		edwards25519.ScMulAdd(&t0, &t4, &t4, &zero)
+	}
+	edwards25519.ScMulAdd(&tz, &t0, &tz, &zero)	// tz = 2^11 + 2^10 + 2^9 + 2^8 + 2^6 + 2^5 + 2^2 + 2^0
+	
+		// if you input z=2, we get 2^(2048 + 1024 + 512 + 256 + 64 + 32 + 4 + 1) = 2^3941 mod l
+		//                         = 4390054613844824731020805728162554857567810442668694040812122513881566113753
+	
+	copy(out, tz)
+	
+	
+	
+	
+	//for i = 1; i < 252; i++ { 			// 2^252
+	//	edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
+	//}
+	
+	
+	
+	
+}
