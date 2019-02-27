@@ -6,13 +6,15 @@ package ed25519
 import (
 	"bytes"
 	"crypto/rand"
-	"encoding/hex"
 	"fmt"
 	"github.com/spacemeshos/ed25519/internal/edwards25519"
 	"github.com/stretchr/testify/assert"
 	"math/big"
 	"testing"
 )
+
+const INV_2 = "3618502788666131106986593281521497120428558179689953803000975469142727125495"
+const INV_17 = "851412420862619083996845478005058145983190159927047953647288345680641676587"
 
 func TestInvertModLOne(t *testing.T) {
 	var x, xInv, z [32]byte
@@ -24,27 +26,36 @@ func TestInvertModLOne(t *testing.T) {
 	assert.Equal(t, "1", outVal.String(), "expected 0 * 0 == 0")
 }
 
+
 func TestInvertModL2(t *testing.T) {
 	var x, xInv, z [32]byte
 	x[0] = byte(2)
 	InvertModL(&xInv, &x)
-	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(xInv[:]))
-	fmt.Printf("Int value: %s\n", ToInt(xInv[:]).String())
+	xInvStr := ToInt(xInv[:]).String()
+	// fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(xInv[:]))
+	fmt.Printf("Int value: %s\n", xInvStr)
+	assert.Equal(t,INV_2, xInvStr)
 
 	edwards25519.ScMulAdd(&x, &x, &xInv, &z)
+	outVal := ToInt(x[:]).String()
+	// fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(x[:]))
+	fmt.Printf("Int value: %s\n", outVal)
+	assert.Equal(t, "1", outVal, "expected x * xInv == 1")
+}
 
-	outVal := ToInt(x[:])
-	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(x[:]))
-	fmt.Printf("Int value: %s\n", outVal.String())
-
-	// checking that we actually got the inverse - result should be 1.
-	assert.Equal(t, "1", outVal.String(), "expected x * xInv == 1")
+func TestInvertModL17(t *testing.T) {
+	var x, xInv, z [32]byte
+	x[0] = byte(17)
+	InvertModL(&xInv, &x)
+	xInvStr := ToInt(xInv[:]).String()
+	assert.Equal(t,INV_17, xInvStr)
+	edwards25519.ScMulAdd(&x, &x, &xInv, &z)
+	outVal := ToInt(x[:]).String()
+	assert.Equal(t, "1", outVal, "expected x * xInv == 1")
 }
 
 func TestInvertModLRnd(testing *testing.T) {
-
 	var t, tinv, z, out [32]byte
-
 	for i := 1; i < 10000; i++ {
 		n, err := rand.Read(t[:])
 		assert.NoError(testing, err, "no system entropy")
