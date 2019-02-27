@@ -50,7 +50,7 @@ func TestInvertModL2(testing *testing.T) {
 	fmt.Printf("Int value: %s\n", outVal.String())
 
 	// checking that we actually got the inverse - result should be 1.
-	assert.Equal(testing, "1", outVal.String(), "expected 1")
+	assert.Equal(testing, "1", outVal.String(), "expected t * tinv to equal 1")
 }
 
 // ToInt returns a big int with the value of 256^0*b[0]+256^1*b[1]+...+256^31*b[len(b)-1]
@@ -60,6 +60,7 @@ func ToInt(b []byte) *big.Int {
 	mul := big.NewInt(0)
 	c := big.NewInt(256)
 	t := big.NewInt(0)
+	data := big.NewInt(0)
 	l := len(b)
 
 	for i := 0; i < l; i++ {
@@ -68,7 +69,7 @@ func ToInt(b []byte) *big.Int {
 		mul = mul.Exp(c, big.NewInt(int64(i)), nil)
 
 		// res[i] = 256^i * b[i]
-		data := big.NewInt(int64(b[i]))
+		data.SetUint64(uint64(b[i]))
 		t = t.Mul(data, mul)
 		res = res.Add(res, t)
 	}
