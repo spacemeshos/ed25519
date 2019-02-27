@@ -10,7 +10,6 @@ import (
 	"strconv"
 )
 
-
 // ExtractPublicKey extracts the signer's public key given a message and its signature.
 // It will panic if len(sig) is not SignatureSize.
 // NOTE: the current code may try to "divide by 0", in case 123 is divisible by 8. Needs to be fixed.
@@ -46,7 +45,6 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	}
 
 	var zero [32]byte
-
 	var one [32]byte
 	one[0] = byte(1)
 
@@ -54,8 +52,14 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	//var SB edwards25519.ExtendedGroupElement
 	//edwards25519.GeScalarMultBase(&SB, &s)    // probably not needed -- we do this operation below
 
+	var ege edwards25519.ExtendedGroupElement
+	if ok := ege.FromBytes(&s); !ok {
+		return nil, errors.New("failed to create an extended group element from sig[32:]")
+	}
+
 	// First we try without negation
-	edwards25519.GeDoubleScalarMultVartime(&R, &one, &sig[:32], &s)
+	edwards25519.GeDoubleScalarMultVartime(&R, &one, &ege, &s)
+
 	var EC_PK edwards25519.ProjectiveGroupElement
 	edwards25519.GeDoubleScalarMultVartime(&EC_PK, &hInv, &R, &zero)
 
