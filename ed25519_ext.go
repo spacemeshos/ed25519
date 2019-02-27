@@ -332,7 +332,7 @@ func InvertModL(out, z *[32]byte) {
 		SquareModL(&t0, &t0)
 	}
 	MultModL(&tz, &t0, &tz) // tz = 122,119,118,116..113, 111..107, 104..102, **100.....52**, **49.....0**
-	copy(t0[:], t2[:])
+	copy(t0[:], t1[:])
 	for i := 1; i < 125; i++ { // 2^124
 		SquareModL(&t0, &t0)
 	}
