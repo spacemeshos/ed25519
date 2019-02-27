@@ -14,7 +14,17 @@ import (
 	"testing"
 )
 
-func TestInvertModL(t *testing.T) {
+func TestInvertModLOne(t *testing.T) {
+	var x, xInv, z [32]byte
+	x[0] = byte(1)
+	InvertModL(&xInv, &x)
+	assert.Equal(t, "1", ToInt(xInv[:]).String())
+	edwards25519.ScMulAdd(&x, &x, &xInv, &z)
+	outVal := ToInt(x[:])
+	assert.Equal(t, "1", outVal.String(), "expected 0 * 0 == 0")
+}
+
+func TestInvertModL2(t *testing.T) {
 	var x, xInv, z [32]byte
 	x[0] = byte(2)
 	InvertModL(&xInv, &x)
@@ -29,42 +39,43 @@ func TestInvertModL(t *testing.T) {
 
 	// checking that we actually got the inverse - result should be 1.
 	assert.Equal(t, "1", outVal.String(), "expected x * xInv == 1")
-
 }
 
-func TestInvertModL2(testing *testing.T) {
+func TestInvertModLRnd(testing *testing.T) {
 	var t, tinv, z, out [32]byte
 
 	// I don't want this to be 2 anymore, but some 'random' 252-bit number.
 	// I call this number t in the code below, so as if is the input to the function.
 	// t[0] = byte(0x2)
+	for i := 1; i < 10000; i++ {
 
-	// @barak - this will put 32 random bytes into t.
-	n, err := rand.Read(t[:])
-	assert.NoError(testing, err, "no system entropy")
-	assert.Equal(testing, 32, n, "expected 32 bytes of entropy")
+		// @barak - this will put 32 random bytes into t.
+		n, err := rand.Read(t[:])
+		assert.NoError(testing, err, "no system entropy")
+		assert.Equal(testing, 32, n, "expected 32 bytes of entropy")
 
-	// @barak - you can zero any byte you want like this...
-	// if you need bit-level clamping than I can easily apply a bit mask on the random data
-	t[31] = byte(0)
+		// @barak - you can zero any byte you want like this...
+		// if you need bit-level clamping than I can easily apply a bit mask on the random data
+		// t[31] = byte(0)
 
-	fmt.Printf("T hex string: 0x%s\n", hex.EncodeToString(t[:]))
-	fmt.Printf("T int value: %s\n", ToInt(t[:]).String())
+		// fmt.Printf("T hex string: 0x%s\n", hex.EncodeToString(t[:]))
+		// fmt.Printf("T int value: %s\n", ToInt(t[:]).String())
 
-	InvertModL(&tinv, &t)
+		InvertModL(&tinv, &t)
 
-	// lets check that we actually get some number
-	fmt.Printf("InvT hex string: 0x%s\n", hex.EncodeToString(tinv[:]))
-	fmt.Printf("InvT int value: %s\n", ToInt(tinv[:]).String())
+		// lets check that we actually get some number
+		// fmt.Printf("InvT hex string: 0x%s\n", hex.EncodeToString(tinv[:]))
+		// fmt.Printf("InvT int value: %s\n", ToInt(tinv[:]).String())
 
-	edwards25519.ScMulAdd(&out, &t, &tinv, &z)
+		edwards25519.ScMulAdd(&out, &t, &tinv, &z)
 
-	outVal := ToInt(out[:])
-	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(out[:]))
-	fmt.Printf("Int value: %s\n", outVal.String())
+		outVal := ToInt(out[:])
+		// fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(out[:]))
+		// fmt.Printf("Int value: %s\n", outVal.String())
 
-	// checking that we actually got the inverse - result should be 1.
-	assert.Equal(testing, "1", outVal.String(), "expected t * tinv to equal 1")
+		// checking that we actually got the inverse - result should be 1.
+		assert.Equal(testing, "1", outVal.String(), "expected t * tinv to equal 1")
+	}
 }
 
 // ToInt returns a big int with the value of 256^0*b[0]+256^1*b[1]+...+256^31*b[len(b)-1]
