@@ -37,7 +37,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 
 	// var hInVReduced [32]byte
 	// edwards25519.ScReduce(&hInVReduced, &hInv)
-	// var R edwards25519.ProjectiveGroupElement
+	 var R edwards25519.ProjectiveGroupElement
 	var s [32]byte
 	copy(s[:], sig[32:])
 
@@ -56,7 +56,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 
 	// First we try without negation
 	 edwards25519.GeDoubleScalarMultVartime(&R, &one, &sig[:32], &s)
-	 var EC_PK [32]byte
+	 var EC_PK edwards25519.ProjectiveGroupElement
 	 edwards25519.GeDoubleScalarMultVartime(&EC_PK, &hInv, &R, &zero)
 
 	pubKey := make([]byte, PublicKeySize)
