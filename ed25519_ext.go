@@ -37,7 +37,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 
 	// var hInVReduced [32]byte
 	// edwards25519.ScReduce(&hInVReduced, &hInv)
-	 var R edwards25519.ProjectiveGroupElement
+	var R edwards25519.ProjectiveGroupElement
 	var s [32]byte
 	copy(s[:], sig[32:])
 
@@ -55,9 +55,9 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	//edwards25519.GeScalarMultBase(&SB, &s)    // probably not needed -- we do this operation below
 
 	// First we try without negation
-	 edwards25519.GeDoubleScalarMultVartime(&R, &one, &sig[:32], &s)
-	 var EC_PK edwards25519.ProjectiveGroupElement
-	 edwards25519.GeDoubleScalarMultVartime(&EC_PK, &hInv, &R, &zero)
+	edwards25519.GeDoubleScalarMultVartime(&R, &one, &sig[:32], &s)
+	var EC_PK edwards25519.ProjectiveGroupElement
+	edwards25519.GeDoubleScalarMultVartime(&EC_PK, &hInv, &R, &zero)
 
 	var pubKey [PublicKeySize]byte
 
@@ -170,7 +170,7 @@ func InvertModL(out, z *[32]byte) {
 	MultModL(&t5, &t0, &t4) // 2^4 + 2^3 + 2^2 + 2^1 + 2^0
 
 	copy(tz[:], t2[:]) // tz = 2^1 + 2^0
-	
+
 	copy(t0[:], t1[:])
 	for i := 1; i < 4; i++ { // 2^3
 		SquareModL(&t0, &t0)
@@ -185,7 +185,7 @@ func InvertModL(out, z *[32]byte) {
 	for i := 1; i < 13; i++ { // 2^12
 		SquareModL(&t0, &t0)
 	}
-	MultModL(&tz, &t0, &tz) // tz = 2^12 + 2^9 + 2^8 + 2^7 + 2^6 + 2^5 + 2^3 + 2^1 + 2^0	
+	MultModL(&tz, &t0, &tz) // tz = 2^12 + 2^9 + 2^8 + 2^7 + 2^6 + 2^5 + 2^3 + 2^1 + 2^0
 	copy(t0[:], t3[:])
 	for i := 1; i < 15; i++ { // 2^16 + 2^15 + 2^14
 		SquareModL(&t0, &t0)
@@ -230,7 +230,7 @@ func InvertModL(out, z *[32]byte) {
 	for i := 1; i < 46; i++ { // 2^46 + 2^45
 		SquareModL(&t0, &t0)
 	}
-	MultModL(&tz, &t0, &tz) // tz = 46,45,41,40,36,35,33,30,28..26, 23..20, 18,16..14, 12,9..5, 3,1,0	
+	MultModL(&tz, &t0, &tz) // tz = 46,45,41,40,36,35,33,30,28..26, 23..20, 18,16..14, 12,9..5, 3,1,0
 	copy(t0[:], t1[:])
 	for i := 1; i < 50; i++ { // 2^49
 		SquareModL(&t0, &t0)
@@ -330,21 +330,20 @@ func InvertModL(out, z *[32]byte) {
 	for i := 1; i < 125; i++ { // 2^124
 		SquareModL(&t0, &t0)
 	}
-	MultModL(&tz, &t0, &tz) // tz = 124,122,119,118,116..113, 111..107, 104..102, **100.....52**, **49.....0**	
+	MultModL(&tz, &t0, &tz) // tz = 124,122,119,118,116..113, 111..107, 104..102, **100.....52**, **49.....0**
 	copy(t0[:], z[:])
 	for i := 1; i < 253; i++ { // 2^252
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
 	MultModL(&tz, &t0, &tz) // tz = 252, 124......
-		
+
 	copy(out[:], tz[:])
 
 	// For z=2, we should get inv(2) mod l = 3618502788666131106986593281521497120428558179689953803000975469142727125495
 	// For z=17, we should get inv(17) mod l = 851412420862619083996845478005058145983190159927047953647288345680641676587
-	
+
 	// COMMENT FOR BARAK w1 := 2^0 + ... + 2^49 = 671914833335275
 	// 			w2 := w1 + 2^52 + ... + 2^100 = 2427280792339553645574181213163
 	// 			w3 := w2 + ... + 2^1124 = 27742317777372353535851937790883648491
 
 }
-
