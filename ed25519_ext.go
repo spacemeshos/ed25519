@@ -177,7 +177,7 @@ func InvertModL(out, z *[32]byte) {
 
 	copy(tz[:], t2[:]) // tz = 2^1 + 2^0
 	
-	copy(t0[:], z[:])
+	copy(t0[:], t1[:])
 	for i := 1; i < 4; i++ { // 2^3
 		SquareModL(&t0, &t0)
 	}
