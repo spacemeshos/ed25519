@@ -42,39 +42,16 @@ func TestInvertModL2(t *testing.T) {
 }
 
 func TestInvertModLRnd(testing *testing.T) {
+
 	var t, tinv, z, out [32]byte
 
-	// I don't want this to be 2 anymore, but some 'random' 252-bit number.
-	// I call this number t in the code below, so as if is the input to the function.
-	// t[0] = byte(0x2)
 	for i := 1; i < 10000; i++ {
-
-		// @barak - this will put 32 random bytes into t.
 		n, err := rand.Read(t[:])
 		assert.NoError(testing, err, "no system entropy")
 		assert.Equal(testing, 32, n, "expected 32 bytes of entropy")
-
-		// @barak - you can zero any byte you want like this...
-		// if you need bit-level clamping than I can easily apply a bit mask on the random data
-		// t[31] = byte(0)
-
-		// fmt.Printf("T hex string: 0x%s\n", hex.EncodeToString(t[:]))
-		// fmt.Printf("T int value: %s\n", ToInt(t[:]).String())
-
 		InvertModL(&tinv, &t)
-
-		// lets check that we actually get some number
-		// fmt.Printf("InvT hex string: 0x%s\n", hex.EncodeToString(tinv[:]))
-		// fmt.Printf("InvT int value: %s\n", ToInt(tinv[:]).String())
-
 		edwards25519.ScMulAdd(&out, &t, &tinv, &z)
-
-		outVal := ToInt(out[:])
-		// fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(out[:]))
-		// fmt.Printf("Int value: %s\n", outVal.String())
-
-		// checking that we actually got the inverse - result should be 1.
-		assert.Equal(testing, "1", outVal.String(), "expected t * tinv to equal 1")
+		assert.Equal(testing, "1", ToInt(out[:]).String(), "expected t * tinv to equal 1")
 	}
 }
 

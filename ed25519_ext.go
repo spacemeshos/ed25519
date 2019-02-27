@@ -21,7 +21,6 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 
 	h := sha512.New()
 	h.Write(sig[:32])
-	//h.Write(publicKey[:])
 	h.Write(message)
 	var digest [64]byte
 	h.Sum(digest[:0])
@@ -36,7 +35,9 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	// edwards25519.ScReduce(&hInVReduced, &hInv)
 	var R edwards25519.ProjectiveGroupElement
 	var s [32]byte
-	copy(s[:], sig[32:])
+	if l := copy(s[:], sig[32:]); l != PublicKeySize {
+		return nil, errors.New("memory copy failed")
+	}
 
 	// https://tools.ietf.org/html/rfc8032#section-5.1.7 requires that s be in
 	// the range [0, order) in order to prevent signature malleability.
