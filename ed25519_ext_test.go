@@ -31,15 +31,13 @@ func TestInvertModL2(testing *testing.T) {
 
 	// @barak - this will put 32 random bytes into t.
 	n, err := rand.Read(t[:])
-
 	assert.NoError(testing, err, "no system entropy")
 	assert.Equal(testing, 32, n, "expected 32 bytes of entropy")
 
 	fmt.Printf("T hex string: 0x%s\n", hex.EncodeToString(t[:]))
 	fmt.Printf("T int value: %s\n", ToInt(t[:]).String())
 
-
-	InvertModL(&tinv, &t) // (so this should be inverse of t, not x)
+	InvertModL(&tinv, &t)
 
 	// lets check that we actually get some number
 	fmt.Printf("InvT hex string: 0x%s\n", hex.EncodeToString(tinv[:]))
@@ -52,7 +50,6 @@ func TestInvertModL2(testing *testing.T) {
 	fmt.Printf("Int value: %s\n", outVal.String())
 
 	// checking that we actually got the inverse - result should be 1.
-
 	assert.Equal(testing, "1", outVal.String(), "expected 1")
 }
 
@@ -96,7 +93,6 @@ func TestPublicKeyExtraction(t *testing.T) {
 	if bytes.Compare(public, public2) == 0 {
 		t.Errorf("expected different public keys")
 	}
-
 }
 
 func TestSignVerifyExt(t *testing.T) {
