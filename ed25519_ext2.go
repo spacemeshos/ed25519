@@ -12,7 +12,6 @@ import (
 
 // ExtractPublicKey extracts the signer's public key given a message and its signature.
 // It will panic if len(sig) is not SignatureSize.
-// NOTE: the current code may try to "divide by 0", in case 123 is divisible by 8. Needs to be fixed.
 func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 
 	if l := len(sig); l != SignatureSize || sig[63]&224 != 0 {
@@ -29,15 +28,12 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	var hReduced [32]byte
 	edwards25519.ScReduce(&hReduced, &digest)
 
-	// var hInv [32]byte
-	// todo: WE NEED INVERSION MOD L
-	// where l = 2^252 + 27742317777372353535851937790883648493
-	// invert(x) := x^(l-2) % l
-	// edwards25519.InvertModL(&hInv, &hReduced)
+	var hInv [32]byte
+	InvertModL(&hInv, &hReduced)
 
 	// var hInVReduced [32]byte
 	// edwards25519.ScReduce(&hInVReduced, &hInv)
-	// var R edwards25519.ProjectiveGroupElement
+	var R edwards25519.ProjectiveGroupElement
 	var s [32]byte
 	copy(s[:], sig[32:])
 
@@ -47,26 +43,24 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 		return nil, errors.New("invalid signature")
 	}
 
-	var buff [32]byte
-	buff[0] = byte(1)
+	var one [32]byte
+	one[0] = byte(1)
 
 	// NEXT: extract R as a point on the curve and compute the inverse of R, sig[32:] --- I'm stuck with that
-	var SB edwards25519.ExtendedGroupElement
-	edwards25519.GeScalarMultBase(&SB, &s)
+	//var SB edwards25519.ExtendedGroupElement
+	//edwards25519.GeScalarMultBase(&SB, &s)    // probably not needed -- we do this operation below
 
-	// First we try without negation ; 1 means the number one?
-	// edwards25519.GeDoubleScalarMultVartime(&R, &buff, &sig[:32], &s)
-	// var EC_PK [32]byte
-
-	// Doc of curve25519 says point are given by x-coord.
-	// https://github.com/golang/crypto/blob/master/curve25519/doc.go
-	// curve25519.ScalarMult(&EC_PK, &hInv, &R)
+	// First we try without negation
+	edwards25519.GeDoubleScalarMultVartime(&R, &one, &sig[:32], &s)
+	var EC_PK [32]byte
+  var zero [32]byte
+  edwards25519.GeDoubleScalarMultVartime(&EC_PK, &hInv, &R, &zero)
 
 	pubKey := make([]byte, PublicKeySize)
 
-	// todo: EC_PK is supposed to be the (x-coordinate of the) public key as an elliptic curve point
-	// I think that we need to obtain the full point, so we can apply ToBytes below
-	//EC_PK.ToBytes(&pubKey)
+	// EC_PK is supposed to be the public key as an elliptic curve point
+	// THIS IS OLD COMMENT (unclear at the moment): I think that we need to obtain the full point, so we can apply ToBytes below
+	EC_PK.ToBytes(&pubKey)
 	return pubKey, nil
 }
 

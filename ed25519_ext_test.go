@@ -20,6 +20,20 @@ func TestInvertModL(t *testing.T) {
 	fmt.Printf("Int value: %s\n", ToInt(out[:]).String())
 }
 
+func Test2InvertModL(t *testing.T) {
+	var x, tinv, out [32]byte
+	x[0] = byte(0x2)	// I don't want this to be 2 anymore, but some 'random' 252-bit number.
+				// I call this number t in the code below, so as if is the input to the function.
+	InvertModL(&tinv, &x)	// (so this should be inverse of t, not x)
+	// let's check that we actually get some number
+	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(tinv[:]))
+	fmt.Printf("Int value: %s\n", ToInt(tinv[:]).String())
+	edwards25519.ScMulAdd(&out, &t, &tinv, &zero)
+	// checking that we actually got the inverse - result should be 1.
+	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(out[:]))
+	fmt.Printf("Int value: %s\n", ToInt(out[:]).String())
+}
+
 // ToInt returns 256^0*b[0]+256^1*b[1]+...+256^31*b[len(b)-1]
 // b must be a non empty bytes slice
 func ToInt(b []byte) *big.Int {
