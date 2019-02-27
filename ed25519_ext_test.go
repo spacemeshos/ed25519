@@ -31,6 +31,11 @@ func TestInvertModL2(testing *testing.T) {
 
 	// @barak - this will put 32 random bytes into t.
 	n, err := rand.Read(t[:])
+
+	// @barak - you can zero any byte you want like this.
+	// if you need bit-level clamping than I can easily apply a bit mask on the random data
+	t[31] = byte(0)
+
 	assert.NoError(testing, err, "no system entropy")
 	assert.Equal(testing, 32, n, "expected 32 bytes of entropy")
 
