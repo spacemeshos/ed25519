@@ -23,7 +23,7 @@ func TestInvertModL(t *testing.T) {
 }
 
 func TestInvertModL2(testing *testing.T) {
-	var t, tinv, out, zero [32]byte
+	var t, tinv, out [32]byte
 
 	// I don't want this to be 2 anymore, but some 'random' 252-bit number.
 	// I call this number t in the code below, so as if is the input to the function.

@@ -3,14 +3,15 @@ package ed25519
 // Copyright 2019 Spacemesh Authors
 // ed25519 extensions
 
-/*
-
 import (
 	"crypto/sha512"
 	"errors"
 	"github.com/spacemeshos/ed25519/internal/edwards25519"
 	"strconv"
 )
+
+// shared zero array - should be a const
+var zero [32]byte
 
 // ExtractPublicKey extracts the signer's public key given a message and its signature.
 // It will panic if len(sig) is not SignatureSize.
@@ -145,13 +146,11 @@ func SignExt(privateKey PrivateKey, message []byte) []byte {
 }
 
 func SquareModL(out, z *[32]byte) {
-	var zero [32]byte
-	edwards25519.ScMulAdd(&out, z, z, &zero)
+	edwards25519.ScMulAdd(out, z, z, &zero)
 }
 
 func MultModL(out, z *[32]byte, w *[32]byte) {
-	var zero [32]byte
-	edwards25519.ScMulAdd(&out, z, w, &zero)
+	edwards25519.ScMulAdd(out, z, w, &zero)
 }
 
 func InvertModL(out, z *[32]byte) {
@@ -172,7 +171,7 @@ func InvertModL(out, z *[32]byte) {
 	}
 	MultModL(&t4, &t0, &t3)  // 2^3 + 2^2 + 2^1 + 2^0
 	for i := 1; i < 2; i++ { // 2^4
-		SquareModL(&t0, &t0, &t0, &zero)
+		SquareModL(&t0, &t0)
 	}
 	MultModL(&t5, &t0, &t4) // 2^4 + 2^3 + 2^2 + 2^1 + 2^0
 
@@ -345,7 +344,7 @@ func InvertModL(out, z *[32]byte) {
 	MultModL(&tz, &t0, &tz) // tz = 124,123, 121, 119..115, 112,110..108, 106,104..101, **98.....53**, **50.....0**
 
 	copy(t0[:], z[:])
-	for i = 1; i < 252; i++ { // 2^252
+	for i := 1; i < 252; i++ { // 2^252
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
 	MultModL(&tz, &t0, &tz) // tz = 252, 124......
@@ -355,4 +354,4 @@ func InvertModL(out, z *[32]byte) {
 	// = 4390054613844824731020805728162554857567810442668694040812122513881566113753
 
 }
-*/
+
