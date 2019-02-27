@@ -49,10 +49,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	var one [32]byte
 	one[0] = byte(1)
 
-	// NEXT: extract R as a point on the curve and compute the inverse of R, sig[32:] --- I'm stuck with that
-	//var SB edwards25519.ExtendedGroupElement
-	//edwards25519.GeScalarMultBase(&SB, &s)    // probably not needed -- we do this operation below
-
+	// NEXT: extract R as a point on the curve and compute the inverse of R, sig[32:]
 	var ege edwards25519.ExtendedGroupElement
 	if ok := ege.FromBytes(&s); !ok {
 		return nil, errors.New("failed to create an extended group element from sig[32:]")
