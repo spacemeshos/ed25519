@@ -5,6 +5,7 @@ package ed25519
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"github.com/spacemeshos/ed25519/internal/edwards25519"
@@ -21,29 +22,40 @@ func TestInvertModL(t *testing.T) {
 	fmt.Printf("Int value: %s\n", ToInt(out[:]).String())
 }
 
-func TestInvertModL2(t *testing.T) {
-	var x, tinv, out, zero [32]byte
-	x[0] = byte(0x2) // I don't want this to be 2 anymore, but some 'random' 252-bit number.
+func TestInvertModL2(testing *testing.T) {
+	var t, tinv, out, zero [32]byte
+
+	// @barak - this will put 32 random bytes into x. lmk if we need to zero out some of the bits so the max
+	// value is the max uint in 252 bits
+
+	n, err := rand.Read(t[:])
+	assert.NoError(testing, err, "no system entropy")
+	assert.Equal(testing, 32, n, "expected 32 bytes of entropy")
+
+	// x[0] = byte(0x2)
+	// I don't want this to be 2 anymore, but some 'random' 252-bit number.
 	// I call this number t in the code below, so as if is the input to the function.
-	InvertModL(&tinv, &x) // (so this should be inverse of t, not x)
+
+
+	InvertModL(&tinv, &t) // (so this should be inverse of t, not x)
 	// let's check that we actually get some number
 	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(tinv[:]))
 	fmt.Printf("Int value: %s\n", ToInt(tinv[:]).String())
 
-	edwards25519.ScMulAdd(&out, &x, &tinv, &zero)
+	edwards25519.ScMulAdd(&out, &t, &tinv, &zero)
 	// checking that we actually got the inverse - result should be 1.
 	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(out[:]))
 	fmt.Printf("Int value: %s\n", ToInt(out[:]).String())
 }
 
-// ToInt returns 256^0*b[0]+256^1*b[1]+...+256^31*b[len(b)-1]
-// b must be a non empty bytes slice
+// ToInt returns a big int with the value of 256^0*b[0]+256^1*b[1]+...+256^31*b[len(b)-1]
+// b must be a non-empty bytes slice. ToInt is a test helper function.
 func ToInt(b []byte) *big.Int {
-	l := len(b)
 	res := big.NewInt(0)
 	mul := big.NewInt(0)
 	c := big.NewInt(256)
 	t := big.NewInt(0)
+	l := len(b)
 
 	for i := 0; i < l; i++ {
 
