@@ -157,14 +157,23 @@ func InvertModL(out, z *[32]byte) {
 
 	// This function is not optimized
 
-	var t0, t1, t2, t3, t4, t5, tz [32]byte
+	var t0, /*t1, t2, t3, t4, t5,*/ tz [32]byte
 
+/*	// t1 = 2^0
 	copy(t1[:], z[:])        // 2^0
+
+	// t0 = 2^1
 	SquareModL(&t0, z)       // 2^1
+
+	// t2 = 2^1 + 2^0
 	MultModL(&t2, &t0, z)    // 2^1 + 2^0
+
+	// t0 = 2^2
 	for i := 1; i < 2; i++ { // 2^2
 		SquareModL(&t0, &t0)
 	}
+
+	// t3 = 2^2 + 2^1 + 2^0
 	MultModL(&t3, &t0, &t2)  // 2^2 + 2^1 + 2^0
 	for i := 1; i < 2; i++ { // 2^3
 		SquareModL(&t0, &t0)
@@ -337,12 +346,16 @@ func InvertModL(out, z *[32]byte) {
 		SquareModL(&t0, &t0)
 	}
 	MultModL(&tz, &t0, &tz) // tz = 124, 123, 121, 119..115, 112,110..108, 106,104..101, **98.....53**, **50.....0**
+*/
 
 	copy(t0[:], z[:])
+	tz[0] = byte(1)
+
 	for i := 1; i < 253; i++ { // 2^252
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
 	MultModL(&tz, &t0, &tz) // tz = 252, 124......
+
 	copy(out[:], tz[:])
 
 	// For z=2, we should get inv(2) mod l = 3618502788666131106986593281521497120428558179689953803000975469142727125495

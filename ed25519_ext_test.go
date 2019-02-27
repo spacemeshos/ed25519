@@ -15,11 +15,21 @@ import (
 )
 
 func TestInvertModL(t *testing.T) {
-	var x, out [32]byte
-	x[0] = byte(0x2)
-	InvertModL(&out, &x)
-	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(out[:]))
-	fmt.Printf("Int value: %s\n", ToInt(out[:]).String())
+	var x, xInv [32]byte
+	x[0] = byte(2)
+	InvertModL(&xInv, &x)
+	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(xInv[:]))
+	fmt.Printf("Int value: %s\n", ToInt(xInv[:]).String())
+
+	edwards25519.ScMulAdd(&x, &x, &xInv, &zero)
+
+	outVal := ToInt(x[:])
+	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(x[:]))
+	fmt.Printf("Int value: %s\n", outVal.String())
+
+	// checking that we actually got the inverse - result should be 1.
+	assert.Equal(t, "1", outVal.String(), "expected x * xInv == 1")
+
 }
 
 func TestInvertModL2(testing *testing.T) {
@@ -31,13 +41,12 @@ func TestInvertModL2(testing *testing.T) {
 
 	// @barak - this will put 32 random bytes into t.
 	n, err := rand.Read(t[:])
-
-	// @barak - you can zero any byte you want like this.
-	// if you need bit-level clamping than I can easily apply a bit mask on the random data
-	t[31] = byte(0)
-
 	assert.NoError(testing, err, "no system entropy")
 	assert.Equal(testing, 32, n, "expected 32 bytes of entropy")
+
+	// @barak - you can zero any byte you want like this...
+	// if you need bit-level clamping than I can easily apply a bit mask on the random data
+	t[31] = byte(0)
 
 	fmt.Printf("T hex string: 0x%s\n", hex.EncodeToString(t[:]))
 	fmt.Printf("T int value: %s\n", ToInt(t[:]).String())
