@@ -59,12 +59,12 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	 var EC_PK edwards25519.ProjectiveGroupElement
 	 edwards25519.GeDoubleScalarMultVartime(&EC_PK, &hInv, &R, &zero)
 
-	pubKey := make([]byte, PublicKeySize)
+	var pubKey [PublicKeySize]byte
 
 	// EC_PK is supposed to be the public key as an elliptic curve point
 	// THIS IS OLD COMMENT (unclear at the moment): I think that we need to obtain the full point, so we can apply ToBytes below
-	 EC_PK.ToBytes(&pubKey)
-return pubKey, nil
+	EC_PK.ToBytes(&pubKey)
+	return pubKey[:], nil
 }
 
 // SignExt signs the message with privateKey and returns a signature.
