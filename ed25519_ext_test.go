@@ -15,13 +15,13 @@ import (
 )
 
 func TestInvertModL(t *testing.T) {
-	var x, xInv [32]byte
+	var x, xInv, z [32]byte
 	x[0] = byte(2)
 	InvertModL(&xInv, &x)
 	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(xInv[:]))
 	fmt.Printf("Int value: %s\n", ToInt(xInv[:]).String())
 
-	edwards25519.ScMulAdd(&x, &x, &xInv, &zero)
+	edwards25519.ScMulAdd(&x, &x, &xInv, &z)
 
 	outVal := ToInt(x[:])
 	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(x[:]))
@@ -33,7 +33,7 @@ func TestInvertModL(t *testing.T) {
 }
 
 func TestInvertModL2(testing *testing.T) {
-	var t, tinv, out [32]byte
+	var t, tinv, z, out [32]byte
 
 	// I don't want this to be 2 anymore, but some 'random' 252-bit number.
 	// I call this number t in the code below, so as if is the input to the function.
@@ -57,7 +57,7 @@ func TestInvertModL2(testing *testing.T) {
 	fmt.Printf("InvT hex string: 0x%s\n", hex.EncodeToString(tinv[:]))
 	fmt.Printf("InvT int value: %s\n", ToInt(tinv[:]).String())
 
-	edwards25519.ScMulAdd(&out, &t, &tinv, &zero)
+	edwards25519.ScMulAdd(&out, &t, &tinv, &z)
 
 	outVal := ToInt(out[:])
 	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(out[:]))
