@@ -10,6 +10,8 @@ import (
 	"strconv"
 )
 
+var zero [32]byte
+
 // ExtractPublicKey extracts the signer's public key given a message and its signature.
 // It will panic if len(sig) is not SignatureSize.
 func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
@@ -53,7 +55,6 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	// First we try without negation
 	// edwards25519.GeDoubleScalarMultVartime(&R, &one, &sig[:32], &s)
 	// var EC_PK [32]byte
-	// var zero [32]byte
 	// edwards25519.GeDoubleScalarMultVartime(&EC_PK, &hInv, &R, &zero)
 
 	pubKey := make([]byte, PublicKeySize)
@@ -137,12 +138,10 @@ func SignExt(privateKey PrivateKey, message []byte) []byte {
 }
 
 func SquareModL(out, z *[32]byte) {
-	var zero [32]byte
 	edwards25519.ScMulAdd(out, z, z, &zero)
 }
 
 func MultModL(out, z *[32]byte, w *[32]byte) {
-	var zero [32]byte
 	edwards25519.ScMulAdd(out, z, w, &zero)
 }
 
@@ -150,7 +149,7 @@ func InvertModL(out, z *[32]byte) {
 
 	// This function is not optimized
 
-	var t0, t1, t2, t3, t4, t5, tz, zero [32]byte
+	var t0, t1, t2, t3, t4, t5, tz [32]byte
 
 	copy(t1[:], z[:])        // 2^0
 	SquareModL(&t0, z)       // 2^1

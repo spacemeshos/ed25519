@@ -29,6 +29,7 @@ func TestInvertModL2(t *testing.T) {
 	// let's check that we actually get some number
 	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(tinv[:]))
 	fmt.Printf("Int value: %s\n", ToInt(tinv[:]).String())
+
 	edwards25519.ScMulAdd(&out, &x, &tinv, &zero)
 	// checking that we actually got the inverse - result should be 1.
 	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(out[:]))
