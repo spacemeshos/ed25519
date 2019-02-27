@@ -240,6 +240,9 @@ func InvertModL(out, z *[32]byte) {
 		SquareModL(&t0, &t0)
 	}
 	MultModL(&tz, &t0, &tz) // tz = 50..48, 45..42, 40..37, 35,31,29,27..24, 22..20, 17..13, 11..8, 6,5,2,0
+	
+	// @aviv: TEST2, please commnet out from here up to "END TEST2"
+	
 	copy(t0[:], t2[:])
 	for i := 1; i < 54; i++ { // 2^54 + 2^53
 		SquareModL(&t0, &t0)
@@ -353,10 +356,16 @@ func InvertModL(out, z *[32]byte) {
 	//@aviv: END TEST1, result for z=2 should be as yesterday
 	//	4390054613844824731020805728162554857567810442668694040812122513881566113753
 	
+	//@aviv: END TEST2, result for z=2 should be
+	//	4901757760524640732838550274255974700911586545025636697443386455923257671848
+	
 	copy(out[:], tz[:])
 
 	// For z=2, we should get inv(2) mod l = 3618502788666131106986593281521497120428558179689953803000975469142727125495
 	// For z=17, we should get inv(17) mod l = 851412420862619083996845478005058145983190159927047953647288345680641676587
+	
+	// COMMENT FOR BARAK w := 2^0 + ... + 2^50 = 2038394422292325
+	// continue with w := w + 2^xxx....
 
 }
 
