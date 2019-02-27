@@ -192,6 +192,9 @@ func InvertModL(out, z *[32]byte) {
 		SquareModL(&t0, &t0)
 	}
 	MultModL(&tz, &t0, &tz) // tz = 2^11 + 2^10 + 2^9 + 2^8 + 2^6 + 2^5 + 2^2 + 2^0
+	
+	// @aviv: TEST1, please commnet out from here up to "END TEST1"; SEE ALSO "END TEST1_B"
+	
 	copy(t0[:], t5[:])
 	for i := 1; i < 14; i++ { // 2^17 + 2^16 + 2^15 + 2^14 + 2^13
 		SquareModL(&t0, &t0)
@@ -338,15 +341,22 @@ func InvertModL(out, z *[32]byte) {
 	}
 	MultModL(&tz, &t0, &tz) // tz = 124,123, 121, 119..115, 112,110..108, 106,104..101, **98.....53**, **50.....0**
 
+	//@aviv: END TEST1_b, if you also include the following block, then result for z=2 should be (I THINK)
+	//	531151246540456329410833597149573553547201907908083785467340544208099232493
+	
 	copy(t0[:], z[:])
 	for i := 1; i < 253; i++ { // 2^252
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
 	MultModL(&tz, &t0, &tz) // tz = 252, 124......
+	
+	//@aviv: END TEST1, result for z=2 should be as yesterday
+	//	4390054613844824731020805728162554857567810442668694040812122513881566113753
+	
 	copy(out[:], tz[:])
 
 	// For z=2, we should get inv(2) mod l = 3618502788666131106986593281521497120428558179689953803000975469142727125495
-	// For z=17, we should get inv(2) mod l = 851412420862619083996845478005058145983190159927047953647288345680641676587
+	// For z=17, we should get inv(17) mod l = 851412420862619083996845478005058145983190159927047953647288345680641676587
 
 }
 
