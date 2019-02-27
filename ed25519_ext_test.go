@@ -21,6 +21,7 @@ func TestInvertModL(t *testing.T) {
 }
 
 // ToInt returns 256^0*b[0]+256^1*b[1]+...+256^31*b[len(b)-1]
+// b must be a non empty bytes slice
 func ToInt(b []byte) *big.Int {
 	l := len(b)
 	res := big.NewInt(0)
@@ -33,7 +34,7 @@ func ToInt(b []byte) *big.Int {
 		// 256^i
 		mul = mul.Exp(c, big.NewInt(int64(i)), nil)
 
-		// res[i] = 256^i * bytes[i]
+		// res[i] = 256^i * b[i]
 		data := big.NewInt(int64(b[i]))
 		t = t.Mul(data, mul)
 		res = res.Add(res, t)
