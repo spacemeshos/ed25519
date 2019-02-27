@@ -344,7 +344,7 @@ func InvertModL(out, z *[32]byte) {
 	MultModL(&tz, &t0, &tz) // tz = 124,123, 121, 119..115, 112,110..108, 106,104..101, **98.....53**, **50.....0**
 
 	copy(t0[:], z[:])
-	for i := 1; i < 252; i++ { // 2^252
+	for i := 1; i < 253; i++ { // 2^252
 		edwards25519.ScMulAdd(&t0, &t0, &t0, &zero)
 	}
 	MultModL(&tz, &t0, &tz) // tz = 252, 124......
