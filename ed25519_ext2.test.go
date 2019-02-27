@@ -51,15 +51,15 @@ func ExtractPublicKey2(message, sig []byte) (PublicKey, error) {
 	//edwards25519.GeScalarMultBase(&SB, &s)    // probably not needed -- we do this operation below
 
 	// First we try without negation
-	// edwards25519.GeDoubleScalarMultVartime(&R, &one, &sig[:32], &s)
-	// var EC_PK [32]byte
-	// edwards25519.GeDoubleScalarMultVartime(&EC_PK, &hInv, &R, &zero)
+	 edwards25519.GeDoubleScalarMultVartime(&R, &one, &sig[:32], &s)
+	 var EC_PK [32]byte
+	 edwards25519.GeDoubleScalarMultVartime(&EC_PK, &hInv, &R, &zero)
 
 	pubKey := make([]byte, PublicKeySize)
 
 	// EC_PK is supposed to be the public key as an elliptic curve point
 	// THIS IS OLD COMMENT (unclear at the moment): I think that we need to obtain the full point, so we can apply ToBytes below
-	// EC_PK.ToBytes(&pubKey)
+	 EC_PK.ToBytes(&pubKey)
 	return pubKey, nil
 }
 
