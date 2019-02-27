@@ -31,16 +31,17 @@ func TestInvertModL2(testing *testing.T) {
 	n, err := rand.Read(t[:])
 	assert.NoError(testing, err, "no system entropy")
 	assert.Equal(testing, 32, n, "expected 32 bytes of entropy")
+	fmt.Printf("T hex string: 0x%s\n", hex.EncodeToString(t[:]))
+	fmt.Printf("T int value: %s\n", ToInt(t[:]).String())
 
 	// x[0] = byte(0x2)
 	// I don't want this to be 2 anymore, but some 'random' 252-bit number.
 	// I call this number t in the code below, so as if is the input to the function.
 
-
 	InvertModL(&tinv, &t) // (so this should be inverse of t, not x)
 	// let's check that we actually get some number
-	fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(tinv[:]))
-	fmt.Printf("Int value: %s\n", ToInt(tinv[:]).String())
+	fmt.Printf("InvT hex string: 0x%s\n", hex.EncodeToString(tinv[:]))
+	fmt.Printf("InvT int value: %s\n", ToInt(tinv[:]).String())
 
 	edwards25519.ScMulAdd(&out, &t, &tinv, &zero)
 	// checking that we actually got the inverse - result should be 1.
