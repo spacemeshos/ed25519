@@ -1,3 +1,6 @@
+// Copyright 2019 Spacemesh Authors
+// edwards25519 additional ops unit tests
+
 package edwards25519
 
 // Copyright 2019 Spacemesh Authors

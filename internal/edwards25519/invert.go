@@ -1,3 +1,6 @@
+// Copyright 2019 Spacemesh Authors
+// edwards25519 additional ops
+
 package edwards25519
 
 func InvertModL(out, z *[32]byte) {

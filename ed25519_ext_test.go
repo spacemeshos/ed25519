@@ -1,5 +1,5 @@
 // Copyright 2019 Spacemesh Authors
-// ed25519 extensions tests
+// ed25519 extensions unit tests
 
 package ed25519
 
@@ -35,7 +35,7 @@ func TestSignVerifyExt(t *testing.T) {
 
 	message := []byte("test message")
 	sig := SignExt(private, message)
-	if !VerifyEx(public, message, sig) {
+	if !VerifyExt(public, message, sig) {
 		t.Errorf("valid signature rejected")
 	}
 
