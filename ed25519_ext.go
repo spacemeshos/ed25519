@@ -21,6 +21,8 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 
 	h := sha512.New()
 	h.Write(sig[:32])
+	// we remove the public key from the hash
+	//h.Write(privateKey[32:])
 	h.Write(message)
 	var digest [64]byte
 	h.Sum(digest[:0])
