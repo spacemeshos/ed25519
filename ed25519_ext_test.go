@@ -17,6 +17,16 @@ import (
 const INV_2 = "3618502788666131106986593281521497120428558179689953803000975469142727125495"
 const INV_17 = "851412420862619083996845478005058145983190159927047953647288345680641676587"
 
+func BenchmarkInvertModL(b *testing.B) {
+	var x, xInv [32]byte
+	x[0] = byte(2)
+	b.ResetTimer()
+
+	for i := 0; i < b.N; i++ {
+		InvertModL(&xInv, &x)
+	}
+}
+
 func TestInvertModLOne(t *testing.T) {
 	var x, xInv, z [32]byte
 	x[0] = byte(1)
