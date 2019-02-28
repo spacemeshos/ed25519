@@ -98,7 +98,9 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	// Extract R = sig[32:] as a point on the curve (and compute the inverse of R)
 	var R edwards25519.ExtendedGroupElement
 	// @aviv, issue no. 1: s != sig[:32], so we extracted the wrong half of the sig into R :)
-	if ok := R.FromBytes(&s); !ok {
+	var r [32]byte
+	copy(r[:], sig[:32])
+	if ok := R.FromBytes(&r); !ok {
 		return nil, errors.New("failed to create extended group element from s")
 	}
 
