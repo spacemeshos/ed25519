@@ -6,17 +6,17 @@ func InvertModL(out, z *[32]byte) {
 
 	var t0, t1, t2, t3, t4, t5, tz, zero [32]byte
 
-	copy(t1[:], z[:])     // 2^0
-	squareModL(&t0, z)    // 2^1
-	multModL(&t2, &t0, z) // 2^1 + 2^0
+	copy(t1[:], z[:])        // 2^0
+	squareModL(&t0, z)       // 2^1
+	multModL(&t2, &t0, z)    // 2^1 + 2^0
 	for i := 1; i < 2; i++ { // 2^2
 		squareModL(&t0, &t0)
 	}
-	multModL(&t3, &t0, &t2) // 2^2 + 2^1 + 2^0
+	multModL(&t3, &t0, &t2)  // 2^2 + 2^1 + 2^0
 	for i := 1; i < 2; i++ { // 2^3
 		squareModL(&t0, &t0)
 	}
-	multModL(&t4, &t0, &t3) // 2^3 + 2^2 + 2^1 + 2^0
+	multModL(&t4, &t0, &t3)  // 2^3 + 2^2 + 2^1 + 2^0
 	for i := 1; i < 2; i++ { // 2^4
 		squareModL(&t0, &t0)
 	}
@@ -202,4 +202,3 @@ func multModL(out, z *[32]byte, w *[32]byte) {
 	var zero [32]byte
 	ScMulAdd(out, z, w, &zero)
 }
-

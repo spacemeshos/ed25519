@@ -35,7 +35,6 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	// var hInVReduced [32]byte
 	// edwards25519.ScReduce(&hInVReduced, &hInv)
 
-
 	var s [32]byte
 	if l := copy(s[:], sig[32:]); l != PublicKeySize {
 		return nil, errors.New("memory copy failed")
@@ -157,5 +156,3 @@ func SignExt(privateKey PrivateKey, message []byte) []byte {
 
 	return signature
 }
-
-
