@@ -158,6 +158,9 @@ func SignExt(privateKey PrivateKey, message []byte) []byte {
 	return signature
 }
 
+// @barak - I'd like to move all the low-level math ops below into internal/edwards25519 soon away from this package
+// once the code is stabilized
+
 func SquareModL(out, z *[32]byte) {
 	var zero [32]byte
 	edwards25519.ScMulAdd(out, z, z, &zero)
