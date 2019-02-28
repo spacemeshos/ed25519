@@ -21,7 +21,6 @@ func BenchmarkInvertModL(b *testing.B) {
 	var x, xInv [32]byte
 	x[0] = byte(2)
 	b.ResetTimer()
-
 	for i := 0; i < b.N; i++ {
 		InvertModL(&xInv, &x)
 	}

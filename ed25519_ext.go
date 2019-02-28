@@ -21,7 +21,6 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 
 	h := sha512.New()
 	h.Write(sig[:32])
-	//h.Write(publicKey[:])
 	h.Write(message)
 	var digest [64]byte
 	h.Sum(digest[:0])
@@ -32,8 +31,11 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	var hInv [32]byte
 	InvertModL(&hInv, &hReduced)
 
+	// @barak - do we need this due to the ScReduce above?
 	// var hInVReduced [32]byte
 	// edwards25519.ScReduce(&hInVReduced, &hInv)
+
+
 	var s [32]byte
 	if l := copy(s[:], sig[32:]); l != PublicKeySize {
 		return nil, errors.New("memory copy failed")
@@ -118,8 +120,12 @@ func SignExt(privateKey PrivateKey, message []byte) []byte {
 	// line 5 in "Algorithm 1": creates r
 	h.Sum(messageDigest[:0])
 
+	// @barak - do you mind if we'll always have the comments in a new line
+	// above the code they refer to? It is hard to read them when they are in the same
+	// line after the code like in the lines below...
 	var messageDigestReduced [32]byte
 	edwards25519.ScReduce(&messageDigestReduced, &messageDigest) // looks like reduction mod l, this is the final r
+
 	var R edwards25519.ExtendedGroupElement
 	edwards25519.GeScalarMultBase(&R, &messageDigestReduced) // line 6 in "Algorithm 1": creates R
 
@@ -353,6 +359,9 @@ func InvertModL(out, z *[32]byte) {
 	MultModL(&tz, &t0, &tz) // tz = 252, 124......
 
 	copy(out[:], tz[:])
+
+	// @barak - we have tests to verify this - can we remove the temp
+	// comments below from this func?
 
 	// For z=2, we should get inv(2) mod l = 3618502788666131106986593281521497120428558179689953803000975469142727125495
 	// For z=17, we should get inv(17) mod l = 851412420862619083996845478005058145983190159927047953647288345680641676587
