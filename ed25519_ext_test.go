@@ -86,7 +86,7 @@ func TestSignVerifyExt(t *testing.T) {
 	}
 
 	wrongMessage := []byte("wrong message")
-	if Verify(public, wrongMessage, sig) {
+	if VerifyEx(public, wrongMessage, sig) {
 		t.Errorf("signature of different message accepted")
 	}
 }
