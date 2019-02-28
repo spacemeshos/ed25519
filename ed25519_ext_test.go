@@ -22,14 +22,14 @@ func BenchmarkInvertModL(b *testing.B) {
 	x[0] = byte(2)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		InvertModL(&xInv, &x)
+		edwards25519.InvertModL(&xInv, &x)
 	}
 }
 
 func TestInvertModLOne(t *testing.T) {
 	var x, xInv, z [32]byte
 	x[0] = byte(1)
-	InvertModL(&xInv, &x)
+	edwards25519.InvertModL(&xInv, &x)
 	assert.Equal(t, "1", ToInt(xInv[:]).String())
 	edwards25519.ScMulAdd(&x, &x, &xInv, &z)
 	outVal := ToInt(x[:])
@@ -39,7 +39,7 @@ func TestInvertModLOne(t *testing.T) {
 func TestInvertModL2(t *testing.T) {
 	var x, xInv, z [32]byte
 	x[0] = byte(2)
-	InvertModL(&xInv, &x)
+	edwards25519.InvertModL(&xInv, &x)
 	xInvStr := ToInt(xInv[:]).String()
 	// fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(xInv[:]))
 	fmt.Printf("Int value: %s\n", xInvStr)
@@ -55,7 +55,7 @@ func TestInvertModL2(t *testing.T) {
 func TestInvertModL17(t *testing.T) {
 	var x, xInv, z [32]byte
 	x[0] = byte(17)
-	InvertModL(&xInv, &x)
+	edwards25519.InvertModL(&xInv, &x)
 	xInvStr := ToInt(xInv[:]).String()
 	assert.Equal(t, INV_17, xInvStr)
 	edwards25519.ScMulAdd(&x, &x, &xInv, &z)
@@ -69,7 +69,7 @@ func TestInvertModLRnd(testing *testing.T) {
 		n, err := rand.Read(t[:])
 		assert.NoError(testing, err, "no system entropy")
 		assert.Equal(testing, 32, n, "expected 32 bytes of entropy")
-		InvertModL(&tinv, &t)
+		edwards25519.InvertModL(&tinv, &t)
 		edwards25519.ScMulAdd(&out, &t, &tinv, &z)
 		assert.Equal(testing, "1", ToInt(out[:]).String(), "expected t * tinv to equal 1")
 	}
