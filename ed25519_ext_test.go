@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-func Verify(publicKey PublicKey, message, sig []byte) bool {
+func VerifyEx(publicKey PublicKey, message, sig []byte) bool {
 	if l := len(publicKey); l != PublicKeySize {
 		panic("ed25519: bad public key length: " + strconv.Itoa(l))
 	}
