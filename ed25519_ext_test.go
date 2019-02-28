@@ -81,12 +81,12 @@ func TestSignVerifyExt(t *testing.T) {
 
 	message := []byte("test message")
 	sig := SignExt(private, message)
-	if !Verify(public, message, sig) {
+	if !VerifyEx(public, message, sig) {
 		t.Errorf("valid signature rejected")
 	}
 
 	wrongMessage := []byte("wrong message")
-	if VerifyEx(public, wrongMessage, sig) {
+	if Verify(public, wrongMessage, sig) {
 		t.Errorf("signature of different message accepted")
 	}
 }
