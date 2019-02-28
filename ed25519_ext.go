@@ -106,6 +106,8 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	}
 
 	// First we try without negation of R
+	edwards25519.FeNeg(&R.X, &R.X)
+	edwards25519.FeNeg(&R.T, &R.T)
 	var A edwards25519.ProjectiveGroupElement
 	edwards25519.GeDoubleScalarMultVartime(&A, &one, &R, &s)
 
@@ -181,7 +183,6 @@ func SignExt(privateKey PrivateKey, message []byte) []byte {
 
 	h.Reset()
 	h.Write(encodedR[:])
-
 	// we remove the public key from the hash
 	//h.Write(privateKey[32:])
 
