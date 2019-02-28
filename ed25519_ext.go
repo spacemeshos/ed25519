@@ -21,6 +21,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 
 	h := sha512.New()
 	h.Write(sig[:32])
+	//h.Write(publicKey[:])
 	h.Write(message)
 	var digest [64]byte
 	h.Sum(digest[:0])
@@ -33,7 +34,6 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 
 	// var hInVReduced [32]byte
 	// edwards25519.ScReduce(&hInVReduced, &hInv)
-	var R edwards25519.ProjectiveGroupElement
 	var s [32]byte
 	if l := copy(s[:], sig[32:]); l != PublicKeySize {
 		return nil, errors.New("memory copy failed")
@@ -45,26 +45,37 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 		return nil, errors.New("invalid signature")
 	}
 
-	// var zero [32]byte
+	var zero [32]byte
 	var one [32]byte
 	one[0] = byte(1)
 
-	// NEXT: extract R as a point on the curve and compute the inverse of R, sig[32:]
-	var ege edwards25519.ExtendedGroupElement
-	if ok := ege.FromBytes(&s); !ok {
+	// Extract R = sig[32:] as a point on the curve (and compute the inverse of R)
+	var R edwards25519.ProjectiveGroupElement
+	if ok := R.FromBytes(&s); !ok {
 		return nil, errors.New("failed to create an extended group element from sig[32:]")
 	}
 
-	// First we try without negation
-	edwards25519.GeDoubleScalarMultVartime(&R, &one, &ege, &s)
+	// First we try without negation of R
+	var A edwards25519.ProjectiveGroupElement
+	edwards25519.GeDoubleScalarMultVartime(&A, &one, &R, &s)
 
+	// We need to convert A from projective to extended group element - I cannot find this function defined
+	// ToBytes takes projective
+	// FromBytes return extended
+	// Let's try....       [in general there should be a smarter way of doing this, so remember to look into this]
+	var dummy [32]byte
+	A.ToBytes(&dummy)
+	var A2 edwards25519.ExtendedGroupElement
+	if ok := A2.FromBytes(&dummy); !ok { 
+		return nil, errors.New("failed to create an extended group element from dummy")
+	}
+	
 	var EC_PK edwards25519.ProjectiveGroupElement
-	// edwards25519.GeDoubleScalarMultVartime(&EC_PK, &hInv, &R, &zero)
+	edwards25519.GeDoubleScalarMultVartime(&EC_PK, &hInv, &A2, &zero)
 
 	var pubKey [PublicKeySize]byte
 
-	// EC_PK is supposed to be the public key as an elliptic curve point
-	// THIS IS OLD COMMENT (unclear at the moment): I think that we need to obtain the full point, so we can apply ToBytes below
+	// EC_PK is supposed to be the public key as an elliptic curve point, we apply ToBytes
 	EC_PK.ToBytes(&pubKey)
 	return pubKey[:], nil
 }
