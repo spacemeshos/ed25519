@@ -5,7 +5,10 @@ package ed25519
 
 import (
 	"bytes"
+	"crypto/sha512"
+	"github.com/spacemeshos/ed25519/internal/edwards25519"
 	"github.com/stretchr/testify/assert"
+	"strconv"
 	"testing"
 )
 
