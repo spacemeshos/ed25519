@@ -13,6 +13,7 @@ import (
 	"testing"
 )
 
+// test vectors
 const INV_2 = "3618502788666131106986593281521497120428558179689953803000975469142727125495"
 const INV_17 = "851412420862619083996845478005058145983190159927047953647288345680641676587"
 
@@ -26,7 +27,6 @@ func TestInvertModLOne(t *testing.T) {
 	assert.Equal(t, "1", outVal.String(), "expected 0 * 0 == 0")
 }
 
-
 func TestInvertModL2(t *testing.T) {
 	var x, xInv, z [32]byte
 	x[0] = byte(2)
@@ -34,7 +34,7 @@ func TestInvertModL2(t *testing.T) {
 	xInvStr := ToInt(xInv[:]).String()
 	// fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(xInv[:]))
 	fmt.Printf("Int value: %s\n", xInvStr)
-	assert.Equal(t,INV_2, xInvStr)
+	assert.Equal(t, INV_2, xInvStr)
 
 	edwards25519.ScMulAdd(&x, &x, &xInv, &z)
 	outVal := ToInt(x[:]).String()
@@ -48,7 +48,7 @@ func TestInvertModL17(t *testing.T) {
 	x[0] = byte(17)
 	InvertModL(&xInv, &x)
 	xInvStr := ToInt(xInv[:]).String()
-	assert.Equal(t,INV_17, xInvStr)
+	assert.Equal(t, INV_17, xInvStr)
 	edwards25519.ScMulAdd(&x, &x, &xInv, &z)
 	outVal := ToInt(x[:]).String()
 	assert.Equal(t, "1", outVal, "expected x * xInv == 1")
