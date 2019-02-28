@@ -119,14 +119,13 @@ func SignExt(privateKey PrivateKey, message []byte) []byte {
 	// line 5 in "Algorithm 1": creates r
 	h.Sum(messageDigest[:0])
 
-	// @barak - do you mind if we'll always have the comments in a new line
-	// above the code they refer to? It is hard to read them when they are in the same
-	// line after the code like in the lines below...
+	// looks like reduction mod l, this is the final r
 	var messageDigestReduced [32]byte
-	edwards25519.ScReduce(&messageDigestReduced, &messageDigest) // looks like reduction mod l, this is the final r
+	edwards25519.ScReduce(&messageDigestReduced, &messageDigest)
 
+	// line 6 in "Algorithm 1": creates R
 	var R edwards25519.ExtendedGroupElement
-	edwards25519.GeScalarMultBase(&R, &messageDigestReduced) // line 6 in "Algorithm 1": creates R
+	edwards25519.GeScalarMultBase(&R, &messageDigestReduced)
 
 	var encodedR [32]byte
 	R.ToBytes(&encodedR)
