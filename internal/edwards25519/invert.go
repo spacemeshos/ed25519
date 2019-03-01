@@ -1,5 +1,5 @@
 // Copyright 2019 Spacemesh Authors
-// edwards25519 additional ops
+// edwards25519 invert mod l
 
 package edwards25519
 

@@ -1,5 +1,5 @@
 // Copyright 2019 Spacemesh Authors
-// edwards25519 additional ops unit tests
+// edwards25519 invert mod l unit tests
 
 package edwards25519
 
