@@ -5,7 +5,6 @@ package edwards25519
 
 import (
 	"crypto/rand"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"math/big"
 	"testing"
