@@ -86,7 +86,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	return pubKey[:], nil
 }
 
-// SignExt signs the message with privateKey and returns a signature.
+// Sign2 signs the message with privateKey and returns a signature.
 // The signature may be verified using VerifyEx(), if the signer's public key is known.
 // The signature returned by this method can be used together with the message
 // to extract the public key using ExtractPublicKey()
@@ -94,7 +94,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 //
 // COMMENTS in the code refer to Algorithm 1 in https://eprint.iacr.org/2017/985.pdf
 //
-func SignExt(privateKey PrivateKey, message []byte) []byte {
+func Sign2(privateKey PrivateKey, message []byte) []byte {
 
 	if l := len(privateKey); l != PrivateKeySize {
 		panic("ed25519: bad private key length: " + strconv.Itoa(l))
@@ -162,9 +162,9 @@ func SignExt(privateKey PrivateKey, message []byte) []byte {
 	return signature
 }
 
-// VerifyExt verifies a signature created with SignExt() using a public key
+// Verify2 verifies a signature created with Sign2() using a public key
 // extracted from the signature using ExtractPublicKey().
-func VerifyExt(publicKey PublicKey, message, sig []byte) bool {
+func Verify2(publicKey PublicKey, message, sig []byte) bool {
 	if l := len(publicKey); l != PublicKeySize {
 		panic("ed25519: bad public key length: " + strconv.Itoa(l))
 	}
@@ -209,4 +209,3 @@ func VerifyExt(publicKey PublicKey, message, sig []byte) bool {
 	R.ToBytes(&checkR)
 	return bytes.Equal(sig[:32], checkR[:])
 }
-

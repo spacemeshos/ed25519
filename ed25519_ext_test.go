@@ -15,7 +15,7 @@ func TestPublicKeyExtraction(t *testing.T) {
 	message := []byte("test message")
 
 	// sign the message
-	sig := SignExt(private, message)
+	sig := Sign2(private, message)
 
 	// extract public key from signature and the message
 	public1, err := ExtractPublicKey(message, sig)
@@ -35,15 +35,15 @@ func TestPublicKeyExtraction(t *testing.T) {
 	}
 }
 
-func TestSignVerifyExt(t *testing.T) {
+func TestSignVerify2(t *testing.T) {
 	var zero zeroReader
 	public, private, _ := GenerateKey(zero)
 
 	message := []byte("test message")
 
 	// sign and verify a message using the public key created by GenerateKey()
-	sig := SignExt(private, message)
-	if !VerifyExt(public, message, sig) {
+	sig := Sign2(private, message)
+	if !Verify2(public, message, sig) {
 		t.Errorf("valid signature rejected")
 	}
 
@@ -61,7 +61,7 @@ func BenchmarkPublicKeyExtraction(b *testing.B) {
 		b.Fatal(err)
 	}
 	message := []byte("Hello, world!")
-	sig := SignExt(priv, message)
+	sig := Sign2(priv, message)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		_, _ = ExtractPublicKey(message, sig)
@@ -77,7 +77,7 @@ func BenchmarkSigningExt(b *testing.B) {
 	message := []byte("Hello, world!")
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		SignExt(priv, message)
+		Sign2(priv, message)
 	}
 }
 
@@ -88,7 +88,7 @@ func BenchmarkVerificationExt(b *testing.B) {
 		b.Fatal(err)
 	}
 	message := []byte("Hello, world!")
-	signature := SignExt(priv, message)
+	signature := Sign2(priv, message)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		Verify(pub, message, signature)
