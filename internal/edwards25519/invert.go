@@ -3,6 +3,7 @@
 
 package edwards25519
 
+// InvertModL computes z mod l and puts the result into out
 func InvertModL(out, z *[32]byte) {
 
 	// This function is not optimized

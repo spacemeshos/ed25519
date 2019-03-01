@@ -12,6 +12,7 @@ import (
 )
 
 // ExtractPublicKey extracts the signer's public key given a message and its signature.
+// Note that signature must be created using Sign2() and NOT using Sign().
 // It will panic if len(sig) is not SignatureSize.
 func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 

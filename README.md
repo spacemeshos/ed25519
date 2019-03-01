@@ -37,3 +37,8 @@ func Verify2(publicKey PublicKey, message, sig []byte) bool
 ```
 go build
 ```
+
+# Testing
+```
+go test ./... -v
+```
