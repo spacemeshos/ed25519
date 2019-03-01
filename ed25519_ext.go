@@ -16,8 +16,6 @@ import (
 // It will panic if len(sig) is not SignatureSize.
 func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 
-	// todo: the current code may try to "divide by 0", in case 123 is divisible by 8. Needs to be fixed.
-
 	if l := len(sig); l != SignatureSize || sig[63]&224 != 0 {
 		return nil, errors.New("ed25519: bad signature format")
 	}
