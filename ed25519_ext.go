@@ -92,10 +92,9 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 // The signature returned by this method can be used together with the message
 // to extract the public key using ExtractPublicKey()
 // It will panic if len(privateKey) is not PrivateKeySize.
-//
-// COMMENTS in the code refer to Algorithm 1 in https://eprint.iacr.org/2017/985.pdf
-//
 func Sign2(privateKey PrivateKey, message []byte) []byte {
+
+	// COMMENTS in the code refer to Algorithm 1 in https://eprint.iacr.org/2017/985.pdf
 
 	if l := len(privateKey); l != PrivateKeySize {
 		panic("ed25519: bad private key length: " + strconv.Itoa(l))

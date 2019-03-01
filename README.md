@@ -1,8 +1,16 @@
 # ed25519
-A drop in replacement for golang/crypto/ed25519 with additional functionality
+A drop-in replacement for `golang/crypto/ed25519` with additional functionality. See https://godoc.org/golang.org/x/crypto/ed25519 .
 
 # Motivation
 todo: explain why the extension are useful 
+
+# Useage
+
+```go
+import "github.com/spacemeshos/ed25519"
+```
+Import package `ed25519` from `github.com/spacemeshos/ed25519` instead of `golang.org/x/crypto/ed25519`.
+
 
 ## Sign2
 Sign2 signs the message with privateKey and returns a signature.
@@ -10,8 +18,6 @@ The signature may be verified using Verify2(), if the signer's public key is kno
 The signature returned by this method can be used together with the message
 to extract the public key using ExtractPublicKey()
 It will panic if len(privateKey) is not PrivateKeySize.
-
-COMMENTS in the code refer to Algorithm 1 in https://eprint.iacr.org/2017/985.pdf
 
 ```
 func Sign2(privateKey PrivateKey, message []byte) []byte
