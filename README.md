@@ -1,5 +1,7 @@
 # ed25519
-A drop-in replacement for `golang/crypto/ed25519` with additional functionality. See https://godoc.org/golang.org/x/crypto/ed25519 .
+A drop-in replacement for `golang/crypto/ed25519` [godoc](https://godoc.org/golang.org/x/crypto/ed25519), 
+[github](https://github.com/golang/crypto/tree/master/ed25519)
+ with additional functionality. 
 
 # Motivation
 todo: explain why the extension are useful 
