@@ -3,9 +3,6 @@
 
 package edwards25519
 
-// Copyright 2019 Spacemesh Authors
-// ed25519 extensions tests
-
 import (
 	"crypto/rand"
 	"fmt"
@@ -68,28 +65,17 @@ func TestInvertModLRnd(testing *testing.T) {
 	var t, tinv, z, out [32]byte
 	for i := 1; i < 10000; i++ {
 		n, err := rand.Read(t[:])
+		fmt.Printf("Rand value value: %x\n", t[:])
+		tStr := ToInt(t[:]).String()
+		fmt.Printf("Int value: %s\n", tStr)
+
 		assert.NoError(testing, err, "no system entropy")
 		assert.Equal(testing, 32, n, "expected 32 bytes of entropy")
+
 		InvertModL(&tinv, &t)
 		ScMulAdd(&out, &t, &tinv, &z)
 		assert.Equal(testing, "1", ToInt(out[:]).String(), "expected t * tinv to equal 1")
 	}
-	// one more time (so we can print the random number)
-	// @aviv: The random number is not rewnewing - if you run test twice, we get the same random value
-	//	  so running 1000 times, is in fact running on the same value (I think)
-	//	  and a question: the random numer is called t, so what is n?
-	n, err := rand.Read(t[:])
-	assert.NoError(testing, err, "no system entropy")
-	assert.Equal(testing, 32, n, "expected 32 bytes of entropy")
-	tStr := ToInt(t[:]).String()
-	fmt.Printf("Int value: %s\n", tStr)
-	InvertModL(&tinv, &t)
-	tinvStr := ToInt(tinv[:]).String()
-	fmt.Printf("Int value: %s\n", tinvStr)
-	ScMulAdd(&out, &t, &tinv, &z)
-	outVal := ToInt(out[:]).String()
-	fmt.Printf("Int value: %s\n", outVal)
-	assert.Equal(testing, "1", ToInt(out[:]).String(), "expected t * tinv to equal 1")
 }
 
 // ToInt returns a big int with the value of 256^0*b[0]+256^1*b[1]+...+256^31*b[len(b)-1]

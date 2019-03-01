@@ -4,7 +4,7 @@ A drop-in replacement for `golang/crypto/ed25519` [godoc](https://godoc.org/gola
  with additional functionality. 
 
 # Motivation
-todo: explain why the extension are useful 
+todo: explain in what scenarios are the extensions useful.
 
 # Useage
 
