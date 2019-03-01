@@ -43,13 +43,13 @@ func TestInvertModL2(t *testing.T) {
 	InvertModL(&xInv, &x)
 	xInvStr := ToInt(xInv[:]).String()
 	// fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(xInv[:]))
-	fmt.Printf("Int value: %s\n", xInvStr)
+	// fmt.Printf("Int value: %s\n", xInvStr)
 	assert.Equal(t, INV_2, xInvStr)
 
 	ScMulAdd(&x, &x, &xInv, &z)
 	outVal := ToInt(x[:]).String()
 	// fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(x[:]))
-	fmt.Printf("Int value: %s\n", outVal)
+	// fmt.Printf("Int value: %s\n", outVal)
 	assert.Equal(t, "1", outVal, "expected x * xInv == 1")
 }
 
@@ -74,6 +74,22 @@ func TestInvertModLRnd(testing *testing.T) {
 		ScMulAdd(&out, &t, &tinv, &z)
 		assert.Equal(testing, "1", ToInt(out[:]).String(), "expected t * tinv to equal 1")
 	}
+	// one more time (so we can print the random number)
+	// @aviv: The random number is not rewnewing - if you run test twice, we get the same random value
+	//	  so running 1000 times, is in fact running on the same value (I think)
+	//	  and a question: the random numer is called t, so what is n?
+	n, err := rand.Read(t[:])
+	assert.NoError(testing, err, "no system entropy")
+	assert.Equal(testing, 32, n, "expected 32 bytes of entropy")
+	tStr := ToInt(t[:]).String()
+	fmt.Printf("Int value: %s\n", tStr)
+	InvertModL(&tinv, &t)
+	tinvStr := ToInt(tinv[:]).String()
+	fmt.Printf("Int value: %s\n", tinvStr)
+	ScMulAdd(&out, &t, &tinv, &z)
+	outVal := ToInt(out[:]).String()
+	fmt.Printf("Int value: %s\n", outVal)
+	assert.Equal(testing, "1", ToInt(out[:]).String(), "expected t * tinv to equal 1")
 }
 
 // ToInt returns a big int with the value of 256^0*b[0]+256^1*b[1]+...+256^31*b[len(b)-1]
