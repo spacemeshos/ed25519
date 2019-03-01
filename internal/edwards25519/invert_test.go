@@ -65,15 +65,17 @@ func TestInvertModLRnd(testing *testing.T) {
 	var t, tinv, z, out [32]byte
 	for i := 1; i < 10000; i++ {
 		n, err := rand.Read(t[:])
-		fmt.Printf("Rand value: 0x%x\n", t[:])
-		// tStr := ToInt(t[:]).String()
-		// fmt.Printf("Int value: %s\n", tStr)
-
 		assert.NoError(testing, err, "no system entropy")
 		assert.Equal(testing, 32, n, "expected 32 bytes of entropy")
-
+		// fmt.Printf("Rand value: 0x%x\n", t[:])
+		// tStr := ToInt(t[:]).String()
+		// fmt.Printf("Int value: %s\n", tStr)
 		InvertModL(&tinv, &t)
+		// tinvStr := ToInt(tinv[:]).String()
+		// fmt.Printf("Int value: %s\n", tinvStr)
 		ScMulAdd(&out, &t, &tinv, &z)
+		// outVal := ToInt(out[:]).String()
+		// fmt.Printf("Int value: %s\n", outVal)
 		assert.Equal(testing, "1", ToInt(out[:]).String(), "expected t * tinv to equal 1")
 	}
 }
