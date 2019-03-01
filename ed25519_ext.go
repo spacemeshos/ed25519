@@ -13,8 +13,9 @@ import (
 
 // ExtractPublicKey extracts the signer's public key given a message and its signature.
 // It will panic if len(sig) is not SignatureSize.
-// NOTE: the current code may try to "divide by 0", in case 123 is divisible by 8. Needs to be fixed.
 func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
+
+	// todo: the current code may try to "divide by 0", in case 123 is divisible by 8. Needs to be fixed.
 
 	if l := len(sig); l != SignatureSize || sig[63]&224 != 0 {
 		return nil, errors.New("ed25519: bad signature format")
@@ -86,11 +87,13 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 }
 
 // SignExt signs the message with privateKey and returns a signature.
-// The signature may be verified using Verify(), if the signer's public key is known.
+// The signature may be verified using VerifyEx(), if the signer's public key is known.
 // The signature returned by this method can be used together with the message
 // to extract the public key using ExtractPublicKey()
 // It will panic if len(privateKey) is not PrivateKeySize.
+//
 // COMMENTS in the code refer to Algorithm 1 in https://eprint.iacr.org/2017/985.pdf
+//
 func SignExt(privateKey PrivateKey, message []byte) []byte {
 
 	if l := len(privateKey); l != PrivateKeySize {
@@ -159,6 +162,8 @@ func SignExt(privateKey PrivateKey, message []byte) []byte {
 	return signature
 }
 
+// VerifyExt verifies a signature created with SignExt() using a public key
+// extracted from the signature using ExtractPublicKey().
 func VerifyExt(publicKey PublicKey, message, sig []byte) bool {
 	if l := len(publicKey); l != PublicKeySize {
 		panic("ed25519: bad public key length: " + strconv.Itoa(l))
