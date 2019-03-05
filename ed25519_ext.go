@@ -78,7 +78,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	var EC_PK edwards25519.ProjectiveGroupElement
 	// This is the old command, used for the built-in scalar multiplication function
 	//edwards25519.GeDoubleScalarMultVartime(&EC_PK, &hInv, &A2, &zero)
-	edwards25519.GeDoubleScalarMultVartime(&EC_PK, &hInv, &A2)
+	edwards25519.GeScalarMultVartime(&EC_PK, &hInv, &A2)
 
 	var pubKey [PublicKeySize]byte
 
