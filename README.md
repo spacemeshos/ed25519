@@ -6,7 +6,7 @@ A drop-in replacement for `golang/crypto/ed25519` ([godoc](https://godoc.org/gol
 # Motivation
 In order to verify the validity of a given signature, the validator should posses the public key of the signer. It can be sent along with the message and its signature, which means that the overall data being sent includes 256 bits of the public key. Our function allows to extract the public key from the signature (and the message), thus the public key may not be sent, resulting in a smaller trasfered data. Note: there's a computational cost for extracting the public key, so one should consider the trade-off between computations and data size.
 
-# Useage
+# Usage
 
 ```go
 import "github.com/spacemeshos/ed25519"
