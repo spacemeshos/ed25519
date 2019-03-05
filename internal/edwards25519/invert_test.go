@@ -5,6 +5,7 @@ package edwards25519
 
 import (
 	"crypto/rand"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"math/big"
 	"testing"
@@ -62,13 +63,13 @@ func TestInvertModL17(t *testing.T) {
 
 func TestInvertModLRnd(testing *testing.T) {
 	var t, tinv, z, out [32]byte
-	for i := 1; i < 10000; i++ {
+	for i := 1; i < 100; i++ {
 		n, err := rand.Read(t[:])
 		assert.NoError(testing, err, "no system entropy")
 		assert.Equal(testing, 32, n, "expected 32 bytes of entropy")
-		// fmt.Printf("Rand value: 0x%x\n", t[:])
-		// tStr := ToInt(t[:]).String()
-		// fmt.Printf("Int value: %s\n", tStr)
+		fmt.Printf("Rand value: 0x%x\n", t[:])
+		tStr := ToInt(t[:]).String()
+		fmt.Printf("Int value: %s\n", tStr)
 		InvertModL(&tinv, &t)
 		// tinvStr := ToInt(tinv[:]).String()
 		// fmt.Printf("Int value: %s\n", tinvStr)
