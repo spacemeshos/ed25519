@@ -632,3 +632,48 @@ func ScMul(s, a, b *[32]byte) {
 	s[31] = byte(s11 >> 17)
 }
 
+// GeScalarMultVartime sets r = a*A
+// where a = a[0]+256*a[1]+...+256^31 a[31].
+// and A is a point on the curve
+func GeScalarMultVartime(r *ProjectiveGroupElement, a *[32]byte, A *ExtendedGroupElement) {
+	var aSlide, bSlide [256]int8
+	var Ai [8]CachedGroupElement // A,3A,5A,7A,9A,11A,13A,15A
+	var t CompletedGroupElement
+	var u, A2 ExtendedGroupElement
+	var i int
+
+	slide(&aSlide, a)
+
+	A.ToCached(&Ai[0])
+	A.Double(&t)
+	t.ToExtended(&A2)
+
+	for i := 0; i < 7; i++ {
+		geAdd(&t, &A2, &Ai[i])
+		t.ToExtended(&u)
+		u.ToCached(&Ai[i+1])
+	}
+
+	r.Zero()
+
+	for i = 255; i >= 0; i-- {
+		if aSlide[i] != 0 {
+			break
+		}
+	}
+
+	for ; i >= 0; i-- {
+		r.Double(&t)
+
+		if aSlide[i] > 0 {
+			t.ToExtended(&u)
+			geAdd(&t, &u, &Ai[aSlide[i]/2])
+		} else if aSlide[i] < 0 {
+			t.ToExtended(&u)
+			geSub(&t, &u, &Ai[(-aSlide[i])/2])
+		}
+
+		t.ToProjective(r)
+	}
+}
+
