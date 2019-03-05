@@ -45,7 +45,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 		return nil, errors.New("invalid signature")
 	}
 
-	var zero [32]byte
+	// var zero [32]byte
 	var one [32]byte
 	one[0] = byte(1)
 
@@ -76,7 +76,9 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	}
 
 	var EC_PK edwards25519.ProjectiveGroupElement
-	edwards25519.GeDoubleScalarMultVartime(&EC_PK, &hInv, &A2, &zero)
+	// This is the old command, used for the built-in scalar multiplication function
+	//edwards25519.GeDoubleScalarMultVartime(&EC_PK, &hInv, &A2, &zero)
+	edwards25519.GeDoubleScalarMultVartime(&EC_PK, &hInv, &A2)
 
 	var pubKey [PublicKeySize]byte
 
