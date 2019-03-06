@@ -5,10 +5,12 @@ package ed25519
 
 import (
 	"bytes"
+	"crypto/rand"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
+// Test with a fixed message
 func TestPublicKeyExtraction(t *testing.T) {
 	var zero zeroReader
 	public, private, _ := GenerateKey(zero)
@@ -35,6 +37,43 @@ func TestPublicKeyExtraction(t *testing.T) {
 	}
 }
 
+// Test with a random message
+func TestPublicKeyExtraction1(t *testing.T) {
+	var zero zeroReader
+	public, private, _ := GenerateKey(zero)
+
+	message := make([]byte, 32)
+	n, err := rand.Read(message)
+	assert.NoError(t, err, "no system entropy")
+	assert.Equal(t, 32, n, "expected 32 bytes of entropy")
+
+	// sign the message
+	sig := Sign2(private, message)
+
+	// extract public key from signature and the message
+	public1, err := ExtractPublicKey(message, sig)
+
+	// ensure extracted key is the same as public key created by GenerateKey()
+	assert.NoError(t, err)
+	assert.EqualValues(t, public, public1, "expected same public key")
+
+	// attempt to extract the public key from the same sig but a wrong message
+
+	wrongMessage := make([]byte, 32)
+	n, err = rand.Read(message)
+	assert.NoError(t, err, "no system entropy")
+	assert.Equal(t, 32, n, "expected 32 bytes of entropy")
+
+	public2, err := ExtractPublicKey(wrongMessage, sig)
+
+	// we expect the extracted key to not be the same as the correct signer public key
+	assert.NoError(t, err)
+	if bytes.Compare(public, public2) == 0 {
+		t.Errorf("expected different public keys")
+	}
+}
+
+// Test Verify2 with a fixed message
 func TestSignVerify2(t *testing.T) {
 	var zero zeroReader
 	public, private, _ := GenerateKey(zero)
@@ -49,10 +88,38 @@ func TestSignVerify2(t *testing.T) {
 
 	// Verification of the signature on a wrong message should fail
 	wrongMessage := []byte("wrong message")
-	if Verify(public, wrongMessage, sig) {
+	if Verify2(public, wrongMessage, sig) {
 		t.Errorf("signature of different message accepted")
 	}
 }
+
+// Test Verify2 with a random message
+func TestSignVerify3(t *testing.T) {
+	var zero zeroReader
+	public, private, _ := GenerateKey(zero)
+
+	message := make([]byte, 32)
+	n, err := rand.Read(message)
+	assert.NoError(t, err, "no system entropy")
+	assert.Equal(t, 32, n, "expected 32 bytes of entropy")
+
+	// sign and verify a message using the public key created by GenerateKey()
+	sig := Sign2(private, message)
+	if !Verify2(public, message, sig) {
+		t.Errorf("valid signature rejected")
+	}
+
+	// Verification of the signature on a wrong message should fail
+	wrongMessage := make([]byte, 32)
+	n, err = rand.Read(message)
+	assert.NoError(t, err, "no system entropy")
+	assert.Equal(t, 32, n, "expected 32 bytes of entropy")
+
+	if Verify2(public, wrongMessage, sig) {
+		t.Errorf("signature of different message accepted")
+	}
+}
+
 
 func BenchmarkPublicKeyExtraction(b *testing.B) {
 	var zero zeroReader
@@ -91,6 +158,6 @@ func BenchmarkVerificationExt(b *testing.B) {
 	signature := Sign2(priv, message)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Verify(pub, message, signature)
+		Verify2(pub, message, signature)
 	}
 }
