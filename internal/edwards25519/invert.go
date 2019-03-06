@@ -688,3 +688,15 @@ func (p *ProjectiveGroupElement) ToExtended(r *ExtendedGroupElement) {
 	FeCopy(&r.Z, &p.Z)
 	FeMul(&r.T, &t, &recip)
 }
+
+func (p *ProjectiveGroupElement) ProjBytesExt(r *ExtendedGroupElement) {
+	var buff [32]byte
+	p.ToBytes(&buff)
+	r.FromBytes(&buff)
+	// I AM FAILING TO ASSERT FromBytes()
+	
+	//var A2 edwards25519.ExtendedGroupElement
+	//if ok := r.FromBytes(&buff); !ok {
+	//	return nil, errors.New("failed to create an extended group element A2 from A")
+	//}
+}
