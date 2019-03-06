@@ -92,7 +92,7 @@ func TestMult(t *testing.T) {
 	GeDoubleScalarMultVartime(&EC_PK, x, &A2, &zero)
 	GeScalarMultVartime(&EC_PK1, x, &A2)
 
-	var pk, pk1 [32] byte
+	var pk, pk1 [32]byte
 	EC_PK.ToBytes(&pk)
 	EC_PK1.ToBytes(&pk1)
 
