@@ -62,6 +62,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	edwards25519.FeNeg(&R.X, &R.X)
 	edwards25519.FeNeg(&R.T, &R.T)
 	var A edwards25519.ProjectiveGroupElement
+	var A2 edwards25519.ExtendedGroupElement
 	edwards25519.GeDoubleScalarMultVartime(&A, &one, &R, &s)
 	A.ToExtended(&A2)
 

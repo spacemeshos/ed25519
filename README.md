@@ -50,3 +50,8 @@ go build
 ```
 go test ./... -v
 ```
+
+# Benchmarking
+```
+go test -bench=.
+```
