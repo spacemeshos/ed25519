@@ -48,52 +48,60 @@ func BenchmarkScMulAdd(bench *testing.B) {
 }
 
 func BenchmarkPointMult(bench *testing.B) {
-	//data := rnd32BytesBench(bench)
-	//var A ExtendedGroupElement
-	//GeScalarMultBase(&A, data)
-	//var A2 ProjectiveGroupElement
-	//a := rnd32BytesBench(bench)
-	////b := rnd32BytesBench(bench)
-	//bench.ResetTimer()
-	//for i := 0; i < bench.N; i++ {
-	//	GeScalarMultVartime(&A2, &a, &A)
-	//}
+	data := rnd32BytesBench(bench)
+	var A ExtendedGroupElement
+	GeScalarMultBase(&A, data)
+
+	var A2 ProjectiveGroupElement
+	a := rnd32BytesBench(bench)
+
+	bench.ResetTimer()
+	for i := 0; i < bench.N; i++ {
+		GeScalarMultVartime(&A2, a, &A)
+	}
 }
 
 func BenchmarkDoublePointMult(bench *testing.B) {
-	//var zero [32]byte
-	//data := rnd32BytesBench(bench)
-	//var A ExtendedGroupElement
-	//GeScalarMultBase(&A, data)
-	//var A2 ProjectiveGroupElement
-	//a := rnd32BytesBench(bench)
-	////b := rnd32BytesBench(bench)
-	//bench.ResetTimer()
-	//for i := 0; i < bench.N; i++ {
-	//	GeDoubleScalarMultVartime(&A2, &a, &A, &zero)
-	//}
+	var zero [32]byte
+	data := rnd32BytesBench(bench)
+
+	var A ExtendedGroupElement
+	GeScalarMultBase(&A, data)
+
+	var A2 ProjectiveGroupElement
+	a := rnd32BytesBench(bench)
+
+	bench.ResetTimer()
+	for i := 0; i < bench.N; i++ {
+		GeDoubleScalarMultVartime(&A2, a, &A, &zero)
+	}
 }
 
 func BenchmarkProj2Ext(bench *testing.B) {
-	//data := rnd32BytesBench(bench)
-	//var A ProjectiveGroupElement
-	//GeScalarMultBase(&A, data)
-	//var A2 ExtendedGroupElement
-	//bench.ResetTimer()
-	//for i := 0; i < bench.N; i++ {
-	//	A.ToExtended(&A2)
-	//}
+	data := rnd32BytesBench(bench)
+
+	var A ExtendedGroupElement
+	GeScalarMultBase(&A, data)
+
+	var A2 ProjectiveGroupElement
+	bench.ResetTimer()
+
+	for i := 0; i < bench.N; i++ {
+		A2.ToExtended(&A)
+	}
 }
 
 func BenchmarkProjBytesExt(bench *testing.B) {
-	//data := rnd32BytesBench(bench)
-	//var A ProjectiveGroupElement
-	//GeScalarMultBase(&A, data)
-	//var A2 ExtendedGroupElement
-	//bench.ResetTimer()
-	//for i := 0; i < bench.N; i++ {
-	//	A.ProjBytesExt(&A2)
-	//}
+	data := rnd32BytesBench(bench)
+
+	var A ExtendedGroupElement
+	GeScalarMultBase(&A, data)
+
+	var A2 ProjectiveGroupElement
+	bench.ResetTimer()
+	for i := 0; i < bench.N; i++ {
+		A2.ProjBytesExt(&A)
+	}
 }
 
 func BenchmarkInvertModL(b *testing.B) {

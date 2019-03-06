@@ -154,11 +154,3 @@ func rnd32Bytes(t *testing.T) *[32]byte {
 	assert.Equal(t, 32, n, "expected 32 bytes of entropy")
 	return &d
 }
-
-func rnd32BytesBench(b *testing.B) *[32]byte {
-	var d [32]byte
-	n, err := rand.Read(d[:])
-	assert.NoError(b, err, "no system entropy")
-	assert.Equal(b, 32, n, "expected 32 bytes of entropy")
-	return &d
-}
