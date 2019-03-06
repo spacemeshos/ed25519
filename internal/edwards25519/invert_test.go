@@ -101,10 +101,34 @@ func TestMult(t *testing.T) {
 	}
 }
 
-func TestExtended2Projective(t *testing.T) {
-	//
-	//
-	//
+func TestProjective2Extended(t *testing.T) {
+	var zero [32]byte
+	data := rnd32Bytes(t)
+
+	var A3 ExtendedGroupElement
+	ok := A3.FromBytes(data)
+	assert.True(t, ok, "failed to create extended group element")
+
+	var A ProjectiveGroupElement
+	A3.ToProjective(&A)
+	
+	var buff [32]byte
+	A.ToBytes(&buff)
+	var A2 edwards25519.ExtendedGroupElement
+	if ok := A2.FromBytes(&buff); !ok {
+	    return nil, errors.New("failed to create an extended group element A2 from A")
+	}
+	
+	var A2b ExtendedGroupElement
+	A.ToExtended(&A2b)
+	
+	var point1, point1b [32]byte
+	A2.ToBytes(&point1)
+	A2b.ToBytes(&point1b)
+
+	if !bytes.Equal(point1[:], point1b[:]) {
+		t.Errorf("expected same point")
+	}
 }
 
 func TestInvertModL17(t *testing.T) {
