@@ -80,8 +80,10 @@ func BenchmarkDoublePointMult(bench *testing.B) {
 func BenchmarkProj2Ext(bench *testing.B) {
 	data := rnd32BytesBench(bench)
 
-	var A ExtendedGroupElement
-	GeScalarMultBase(&A, data)
+	var A3 ExtendedGroupElement
+	GeScalarMultBase(&A3, data)
+	var A ProjectiveGroupElement
+	A3.ToProjective(&A)
 
 	var A2 ProjectiveGroupElement
 	bench.ResetTimer()
@@ -94,8 +96,10 @@ func BenchmarkProj2Ext(bench *testing.B) {
 func BenchmarkProjBytesExt(bench *testing.B) {
 	data := rnd32BytesBench(bench)
 
-	var A ExtendedGroupElement
-	GeScalarMultBase(&A, data)
+	var A3 ExtendedGroupElement
+	GeScalarMultBase(&A3, data)
+	var A ProjectiveGroupElement
+	A3.ToProjective(&A)
 
 	var A2 ProjectiveGroupElement
 	bench.ResetTimer()
