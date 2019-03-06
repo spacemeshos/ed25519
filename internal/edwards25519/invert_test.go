@@ -102,6 +102,7 @@ func TestMult(t *testing.T) {
 }
 
 func TestProjective2Extended(t *testing.T) {
+
 	data := rnd32Bytes(t)
 
 	var A3 ExtendedGroupElement
@@ -110,21 +111,17 @@ func TestProjective2Extended(t *testing.T) {
 
 	var A ProjectiveGroupElement
 	A3.ToProjective(&A)
-	
+
 	var buff [32]byte
 	A.ToBytes(&buff)
 	var A2 ExtendedGroupElement
-	// this does not work for some reason (but works in our main code)
-	//if ok := A2.FromBytes(&buff); !ok {
-	//    return nil, errors.New("failed to create an extended group element A2 from A")
-	//}
-	// so instead:
+
 	ok2 := A2.FromBytes(&buff)
 	assert.True(t, ok2, "failed to create extended group element")
-	
+
 	var A2b ExtendedGroupElement
 	A.ToExtended(&A2b)
-	
+
 	var point1, point1b [32]byte
 	A2.ToBytes(&point1)
 	A2b.ToBytes(&point1b)
