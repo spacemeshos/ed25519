@@ -53,5 +53,6 @@ go test ./... -v
 
 # Benchmarking
 ```
-go test -bench=.
+go test -bench= .
+go test -bench . github.com/spacemeshos/ed25519/internal/edwards25519
 ```
