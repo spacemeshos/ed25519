@@ -111,13 +111,15 @@ func TestProjective2Extended(t *testing.T) {
 
 	var A ProjectiveGroupElement
 	A3.ToProjective(&A)
-
-	var buff [32]byte
-	A.ToBytes(&buff)
+	
 	var A2 ExtendedGroupElement
+	A.ProjBytesExt(&A2)
 
-	ok2 := A2.FromBytes(&buff)
-	assert.True(t, ok2, "failed to create extended group element")
+	//var buff [32]byte
+	//A.ToBytes(&buff)
+	//var A2 ExtendedGroupElement
+	//ok2 := A2.FromBytes(&buff)
+	//assert.True(t, ok2, "failed to create extended group element")
 
 	var A2b ExtendedGroupElement
 	A.ToExtended(&A2b)
