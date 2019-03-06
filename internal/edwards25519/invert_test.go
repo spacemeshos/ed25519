@@ -101,6 +101,12 @@ func TestMult(t *testing.T) {
 	}
 }
 
+func TestExtended2Projective(t *testing.T) {
+	//
+	//
+	//
+}
+
 func TestInvertModL17(t *testing.T) {
 	var x, xInv, z [32]byte
 	x[0] = byte(17)
