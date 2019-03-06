@@ -4,6 +4,7 @@
 package edwards25519
 
 import (
+	"bytes"
 	"crypto/rand"
 	"github.com/stretchr/testify/assert"
 	"math/big"
@@ -79,20 +80,25 @@ func TestInvertModL2(t *testing.T) {
 
 func TestMult(t *testing.T) {
 
-	var x, xInv, zero [32]byte
-	x[0] = byte(2)
-	InvertModL(&xInv, &x)
+	var zero [32]byte
+	data := rnd32Bytes(t)
+	x := rnd32Bytes(t)
 
 	var A2 ExtendedGroupElement
-	// @barak: set A2 value here to?
+	ok := A2.FromBytes(data)
+	assert.True(t, ok, "failed to create extended group element")
 
-	var EC_PK ProjectiveGroupElement
-	var EC_PK1 ProjectiveGroupElement
+	var EC_PK, EC_PK1 ProjectiveGroupElement
+	GeDoubleScalarMultVartime(&EC_PK, x, &A2, &zero)
+	GeScalarMultVartime(&EC_PK1, x, &A2)
 
-	GeDoubleScalarMultVartime(&EC_PK, &xInv, &A2, &zero)
-	GeScalarMultVartime(&EC_PK1, &xInv, &A2)
+	var pk, pk1 [32] byte
+	EC_PK.ToBytes(&pk)
+	EC_PK1.ToBytes(&pk1)
 
-	// todo: compare EC_PK and and EC_PK1
+	if !bytes.Equal(pk[:], pk1[:]) {
+		t.Errorf("expected same public key")
+	}
 }
 
 func TestInvertModL17(t *testing.T) {
