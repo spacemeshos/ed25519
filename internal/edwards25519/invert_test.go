@@ -15,6 +15,23 @@ import (
 const INV_2 = "3618502788666131106986593281521497120428558179689953803000975469142727125495"
 const INV_17 = "851412420862619083996845478005058145983190159927047953647288345680641676587"
 
+func TestScMul(t *testing.T) {
+	var s, s1, a, b [32]byte
+
+	n, err := rand.Read(a[:])
+	assert.NoError(t, err, "no system entropy")
+	assert.Equal(t, 32, n, "expected 32 bytes of entropy")
+
+	n, err = rand.Read(b[:])
+	assert.NoError(t, err, "no system entropy")
+	assert.Equal(t, 32, n, "expected 32 bytes of entropy")
+
+	ScMul(&s, &a, &b)
+	var zero [32]byte
+	ScMulAdd(&s1, &a, &b, &zero)
+	assert.Equal(t, s, s1, "expected same output")
+}
+
 func BenchmarkInvertModL(b *testing.B) {
 	var x, xInv [32]byte
 	x[0] = byte(2)
@@ -102,5 +119,3 @@ func ToInt(b []byte) *big.Int {
 	}
 	return res
 }
-
-

@@ -204,7 +204,7 @@ func squareModL(out, z *[32]byte) {
 	ScMul(out, z, z)
 }
 
-func multModL(out, z *[32]byte, w *[32]byte) {
+func multModL(out, z, w *[32]byte) {
 	// we keep the old commands for benchmarking
 	// var zero [32]byte
 	// ScMulAdd(out, z, w, &zero)
@@ -246,7 +246,7 @@ func ScMul(s, a, b *[32]byte) {
 	b11 := (load4(b[28:]) >> 7)
 	var carry [23]int64
 
-	s0 := a0*b0
+	s0 := a0 * b0
 	s1 := a0*b1 + a1*b0
 	s2 := a0*b2 + a1*b1 + a2*b0
 	s3 := a0*b3 + a1*b2 + a2*b1 + a3*b0
@@ -679,13 +679,12 @@ func GeScalarMultVartime(r *ProjectiveGroupElement, a *[32]byte, A *ExtendedGrou
 
 func (p *ProjectiveGroupElement) ToExtended(r *ExtendedGroupElement) {
 	var recip, t FieldElement
-	
+
 	FeInvert(&recip, &p.Z)
 	FeMul(&t, &p.X, &p.Y)
-	
+
 	FeCopy(&r.X, &p.X)
 	FeCopy(&r.Y, &p.Y)
 	FeCopy(&r.Z, &p.Z)
 	FeMul(&r.T, &t, &recip)
 }
-

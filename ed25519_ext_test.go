@@ -120,7 +120,6 @@ func TestSignVerify3(t *testing.T) {
 	}
 }
 
-
 func BenchmarkPublicKeyExtraction(b *testing.B) {
 	var zero zeroReader
 	_, priv, err := GenerateKey(zero)

@@ -70,7 +70,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	// ToBytes takes projective
 	// FromBytes return extended
 	// Let's try....  [in general there should be a smarter way of doing this, so remember to look into this]
-	
+
 	// following is old commands, which we keep for benchmarking
 	//var buff [32]byte
 	//A.ToBytes(&buff)
