@@ -83,10 +83,14 @@ func TestMult(t *testing.T) {
 	var zero [32]byte
 	data := rnd32Bytes(t)
 	x := rnd32Bytes(t)
-
+	
+	// Instead of creating a point A2 from random bytes, we take A2 = b*B for random b.
+	// Note that A2 is random in <B>, but not in E -- need to fix this some how:
+	// Take A2 = a*A (or = a*A + b*B) for "full order" A
 	var A2 ExtendedGroupElement
-	ok := A2.FromBytes(data)
-	assert.True(t, ok, "failed to create extended group element")
+	//ok := A2.FromBytes(data)
+	//assert.True(t, ok, "failed to create extended group element")
+	GeScalarMultBase(&A2, data)
 
 	var EC_PK, EC_PK1 ProjectiveGroupElement
 	GeDoubleScalarMultVartime(&EC_PK, x, &A2, &zero)
@@ -105,9 +109,13 @@ func TestProjective2Extended(t *testing.T) {
 
 	data := rnd32Bytes(t)
 
+	// Instead of creating a point A3 from random bytes, we take A3 = b*B for random b.
+	// Note that A3 is random in <B>, but not in E -- need to fix this some how:
+	// Take A3 = a*A (or = a*A + b*B) for "full order" A
 	var A3 ExtendedGroupElement
-	ok := A3.FromBytes(data)
-	assert.True(t, ok, "failed to create extended group element")
+	//ok := A3.FromBytes(data)
+	//assert.True(t, ok, "failed to create extended group element")
+	GeScalarMultBase(&A3, data)
 
 	var A ProjectiveGroupElement
 	A3.ToProjective(&A)
