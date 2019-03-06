@@ -63,17 +63,20 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	edwards25519.FeNeg(&R.T, &R.T)
 	var A edwards25519.ProjectiveGroupElement
 	edwards25519.GeDoubleScalarMultVartime(&A, &one, &R, &s)
+	A.ToExtended(&A2)
 
 	// We need to convert A from projective to extended group element - I cannot find this function defined
 	// ToBytes takes projective
 	// FromBytes return extended
 	// Let's try....  [in general there should be a smarter way of doing this, so remember to look into this]
-	var buff [32]byte
-	A.ToBytes(&buff)
-	var A2 edwards25519.ExtendedGroupElement
-	if ok := A2.FromBytes(&buff); !ok {
-		return nil, errors.New("failed to create an extended group element A2 from A")
-	}
+	
+	// following is old commands, which we keep for benchmarking
+	//var buff [32]byte
+	//A.ToBytes(&buff)
+	//var A2 edwards25519.ExtendedGroupElement
+	//if ok := A2.FromBytes(&buff); !ok {
+	//	return nil, errors.New("failed to create an extended group element A2 from A")
+	//}
 
 	var EC_PK edwards25519.ProjectiveGroupElement
 	// This is the old command, used for the built-in scalar multiplication function
