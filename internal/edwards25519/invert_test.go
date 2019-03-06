@@ -5,7 +5,6 @@ package edwards25519
 
 import (
 	"crypto/rand"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"math/big"
 	"testing"
@@ -18,7 +17,7 @@ const INV_17 = "8514124208626190839968454780050581459831901599270479536472883456
 
 func TestScMul(t *testing.T) {
 
-	var s, s1, zero [32]byte
+	var s, 	s1, zero [32]byte
 	a := rnd32Bytes(t)
 	b := rnd32Bytes(t)
 
@@ -102,20 +101,11 @@ func TestInvertModL17(t *testing.T) {
 }
 
 func TestInvertModLRnd(testing *testing.T) {
-	var t, tinv, z, out [32]byte
+	var tinv, z, out [32]byte
 	for i := 1; i < 100; i++ {
-		n, err := rand.Read(t[:])
-		assert.NoError(testing, err, "no system entropy")
-		assert.Equal(testing, 32, n, "expected 32 bytes of entropy")
-		fmt.Printf("Rand value: 0x%x\n", t[:])
-		tStr := ToInt(t[:]).String()
-		fmt.Printf("Int value: %s\n", tStr)
-		InvertModL(&tinv, &t)
-		// tinvStr := ToInt(tinv[:]).String()
-		// fmt.Printf("Int value: %s\n", tinvStr)
-		ScMulAdd(&out, &t, &tinv, &z)
-		// outVal := ToInt(out[:]).String()
-		// fmt.Printf("Int value: %s\n", outVal)
+		t := rnd32Bytes(testing)
+		InvertModL(&tinv, t)
+		ScMulAdd(&out, t, &tinv, &z)
 		assert.Equal(testing, "1", ToInt(out[:]).String(), "expected t * tinv to equal 1")
 	}
 }
