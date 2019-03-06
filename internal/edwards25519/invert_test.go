@@ -48,52 +48,52 @@ func BenchmarkScMulAdd(bench *testing.B) {
 }
 
 func BenchmarkPointMult(bench *testing.B) {
-	data := rnd32Bytes(t)
-	var A ExtendedGroupElement
-	GeScalarMultBase(&A, data)
-	var A2 edwards25519.ProjectiveGroupElement
-	a := rnd32BytesBench(bench)
-	//b := rnd32BytesBench(bench)
-	bench.ResetTimer()
-	for i := 0; i < bench.N; i++ {
-		GeScalarMultVartime(&A2, &a, &A)
-	}
+	//data := rnd32BytesBench(bench)
+	//var A ExtendedGroupElement
+	//GeScalarMultBase(&A, data)
+	//var A2 ProjectiveGroupElement
+	//a := rnd32BytesBench(bench)
+	////b := rnd32BytesBench(bench)
+	//bench.ResetTimer()
+	//for i := 0; i < bench.N; i++ {
+	//	GeScalarMultVartime(&A2, &a, &A)
+	//}
 }
 
 func BenchmarkDoublePointMult(bench *testing.B) {
-	var zero [32]byte
-	data := rnd32Bytes(t)
-	var A ExtendedGroupElement
-	GeScalarMultBase(&A, data)
-	var A2 edwards25519.ProjectiveGroupElement
-	a := rnd32BytesBench(bench)
-	//b := rnd32BytesBench(bench)
-	bench.ResetTimer()
-	for i := 0; i < bench.N; i++ {
-		GeDoubleScalarMultVartime(&A2, &a, &A, &zero)
-	}
+	//var zero [32]byte
+	//data := rnd32BytesBench(bench)
+	//var A ExtendedGroupElement
+	//GeScalarMultBase(&A, data)
+	//var A2 ProjectiveGroupElement
+	//a := rnd32BytesBench(bench)
+	////b := rnd32BytesBench(bench)
+	//bench.ResetTimer()
+	//for i := 0; i < bench.N; i++ {
+	//	GeDoubleScalarMultVartime(&A2, &a, &A, &zero)
+	//}
 }
 
 func BenchmarkProj2Ext(bench *testing.B) {
-	data := rnd32Bytes(t)
-	var A ProjectiveGroupElement
-	GeScalarMultBase(&A, data)
-	var A2 ExtendedGroupElement
-	bench.ResetTimer()
-	for i := 0; i < bench.N; i++ {
-		A.ToExtended(&A2)
-	}
+	//data := rnd32BytesBench(bench)
+	//var A ProjectiveGroupElement
+	//GeScalarMultBase(&A, data)
+	//var A2 ExtendedGroupElement
+	//bench.ResetTimer()
+	//for i := 0; i < bench.N; i++ {
+	//	A.ToExtended(&A2)
+	//}
 }
 
 func BenchmarkProjBytesExt(bench *testing.B) {
-	data := rnd32Bytes(t)
-	var A ProjectiveGroupElement
-	GeScalarMultBase(&A, data)
-	var A2 ExtendedGroupElement
-	bench.ResetTimer()
-	for i := 0; i < bench.N; i++ {
-		A.ProjBytesExt(&A2)
-	}
+	//data := rnd32BytesBench(bench)
+	//var A ProjectiveGroupElement
+	//GeScalarMultBase(&A, data)
+	//var A2 ExtendedGroupElement
+	//bench.ResetTimer()
+	//for i := 0; i < bench.N; i++ {
+	//	A.ProjBytesExt(&A2)
+	//}
 }
 
 func BenchmarkInvertModL(b *testing.B) {
@@ -139,7 +139,7 @@ func TestMult(t *testing.T) {
 	//var A2 ExtendedGroupElement
 	//ok := A2.FromBytes(data)
 	//assert.True(t, ok, "failed to create extended group element")
-	var A ProjectiveGroupElement
+	var A ExtendedGroupElement
 	GeScalarMultBase(&A, data)
 
 	var EC_PK, EC_PK1 ProjectiveGroupElement
@@ -168,8 +168,10 @@ func TestProjective2Extended(t *testing.T) {
 	//var A ProjectiveGroupElement
 	//A3.ToProjective(&A)
 	
+	var A3 ExtendedGroupElement
+	GeScalarMultBase(&A3, data)
 	var A ProjectiveGroupElement
-	GeScalarMultBase(&A, data)
+	A3.ToProjective(&A)
 	
 	var A2 ExtendedGroupElement
 	A.ProjBytesExt(&A2)
