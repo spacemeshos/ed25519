@@ -14,10 +14,9 @@ import (
 const INV_2 = "3618502788666131106986593281521497120428558179689953803000975469142727125495"
 const INV_17 = "851412420862619083996845478005058145983190159927047953647288345680641676587"
 
-
 func TestScMul(t *testing.T) {
 
-	var s, 	s1, zero [32]byte
+	var s, s1, zero [32]byte
 	a := rnd32Bytes(t)
 	b := rnd32Bytes(t)
 
@@ -28,27 +27,20 @@ func TestScMul(t *testing.T) {
 }
 
 func BenchmarkScMul(bench *testing.B) {
-
 	var s [32]byte
 	a := rnd32BytesBench(bench)
 	b := rnd32BytesBench(bench)
-
 	bench.ResetTimer()
-
 	for i := 0; i < bench.N; i++ {
 		ScMul(&s, a, b)
 	}
 }
 
 func BenchmarkScMulAdd(bench *testing.B) {
-
 	var s, zero [32]byte
-
 	a := rnd32BytesBench(bench)
 	b := rnd32BytesBench(bench)
-
 	bench.ResetTimer()
-
 	for i := 0; i < bench.N; i++ {
 		ScMulAdd(&s, a, b, &zero)
 	}
@@ -78,15 +70,29 @@ func TestInvertModL2(t *testing.T) {
 	x[0] = byte(2)
 	InvertModL(&xInv, &x)
 	xInvStr := ToInt(xInv[:]).String()
-	// fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(xInv[:]))
-	// fmt.Printf("Int value: %s\n", xInvStr)
 	assert.Equal(t, INV_2, xInvStr)
 
 	ScMulAdd(&x, &x, &xInv, &z)
 	outVal := ToInt(x[:]).String()
-	// fmt.Printf("Hex string: 0x%s\n", hex.EncodeToString(x[:]))
-	// fmt.Printf("Int value: %s\n", outVal)
 	assert.Equal(t, "1", outVal, "expected x * xInv == 1")
+}
+
+func TestMult(t *testing.T) {
+
+	var x, xInv, zero [32]byte
+	x[0] = byte(2)
+	InvertModL(&xInv, &x)
+
+	var A2 ExtendedGroupElement
+	// @barak: set A2 value here to?
+
+	var EC_PK ProjectiveGroupElement
+	var EC_PK1 ProjectiveGroupElement
+
+	GeDoubleScalarMultVartime(&EC_PK, &xInv, &A2, &zero)
+	GeScalarMultVartime(&EC_PK1, &xInv, &A2)
+
+	// todo: compare EC_PK and and EC_PK1
 }
 
 func TestInvertModL17(t *testing.T) {

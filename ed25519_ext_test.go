@@ -162,4 +162,3 @@ func rnd32BytesBench(b *testing.B) *[32]byte {
 	assert.Equal(b, 32, n, "expected 32 bytes of entropy")
 	return &d
 }
-
