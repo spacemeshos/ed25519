@@ -677,3 +677,15 @@ func GeScalarMultVartime(r *ProjectiveGroupElement, a *[32]byte, A *ExtendedGrou
 	}
 }
 
+func (p *ProjectiveGroupElement) ToExtended(r *ExtendedGroupElement) {
+	var recip, t FieldElement
+	
+	FeInvert(&recip, &p.Z)
+	FeMul(&t, &p.X, &p.Y)
+	
+	FeCopy(&r.X, &p.X)
+	FeCopy(&r.Y, &p.Y)
+	FeCopy(&r.Z, &p.Z)
+	FeMul(&r.T, &t, &recip)
+}
+
