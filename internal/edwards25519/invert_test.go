@@ -85,11 +85,11 @@ func BenchmarkProj2Ext(bench *testing.B) {
 	var A ProjectiveGroupElement
 	A3.ToProjective(&A)
 
-	var A2 ProjectiveGroupElement
+	var A2 ExtendedGroupElement
 	bench.ResetTimer()
 
 	for i := 0; i < bench.N; i++ {
-		A2.ToExtended(&A)
+		A.ToExtended(&A2)
 	}
 }
 
@@ -101,10 +101,10 @@ func BenchmarkProjBytesExt(bench *testing.B) {
 	var A ProjectiveGroupElement
 	A3.ToProjective(&A)
 
-	var A2 ProjectiveGroupElement
+	var A2 ExtendedGroupElement
 	bench.ResetTimer()
 	for i := 0; i < bench.N; i++ {
-		A2.ProjBytesExt(&A)
+		A.ProjBytesExt(&A2)
 	}
 }
 
