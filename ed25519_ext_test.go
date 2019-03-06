@@ -42,16 +42,13 @@ func TestPublicKeyExtraction1(t *testing.T) {
 	var zero zeroReader
 	public, private, _ := GenerateKey(zero)
 
-	message := make([]byte, 32)
-	n, err := rand.Read(message)
-	assert.NoError(t, err, "no system entropy")
-	assert.Equal(t, 32, n, "expected 32 bytes of entropy")
+	message := rnd32Bytes(t)
 
 	// sign the message
-	sig := Sign2(private, message)
+	sig := Sign2(private, message[:])
 
 	// extract public key from signature and the message
-	public1, err := ExtractPublicKey(message, sig)
+	public1, err := ExtractPublicKey(message[:], sig)
 
 	// ensure extracted key is the same as public key created by GenerateKey()
 	assert.NoError(t, err)
@@ -59,12 +56,8 @@ func TestPublicKeyExtraction1(t *testing.T) {
 
 	// attempt to extract the public key from the same sig but a wrong message
 
-	wrongMessage := make([]byte, 32)
-	n, err = rand.Read(message)
-	assert.NoError(t, err, "no system entropy")
-	assert.Equal(t, 32, n, "expected 32 bytes of entropy")
-
-	public2, err := ExtractPublicKey(wrongMessage, sig)
+	wrongMessage := rnd32Bytes(t)
+	public2, err := ExtractPublicKey(wrongMessage[:], sig)
 
 	// we expect the extracted key to not be the same as the correct signer public key
 	assert.NoError(t, err)
@@ -98,24 +91,17 @@ func TestSignVerify3(t *testing.T) {
 	var zero zeroReader
 	public, private, _ := GenerateKey(zero)
 
-	message := make([]byte, 32)
-	n, err := rand.Read(message)
-	assert.NoError(t, err, "no system entropy")
-	assert.Equal(t, 32, n, "expected 32 bytes of entropy")
+	message := rnd32Bytes(t)
 
 	// sign and verify a message using the public key created by GenerateKey()
-	sig := Sign2(private, message)
-	if !Verify2(public, message, sig) {
+	sig := Sign2(private, message[:])
+	if !Verify2(public, message[:], sig) {
 		t.Errorf("valid signature rejected")
 	}
 
 	// Verification of the signature on a wrong message should fail
-	wrongMessage := make([]byte, 32)
-	n, err = rand.Read(message)
-	assert.NoError(t, err, "no system entropy")
-	assert.Equal(t, 32, n, "expected 32 bytes of entropy")
-
-	if Verify2(public, wrongMessage, sig) {
+	wrongMessage := rnd32Bytes(t)
+	if Verify2(public, wrongMessage[:], sig) {
 		t.Errorf("signature of different message accepted")
 	}
 }
@@ -160,3 +146,20 @@ func BenchmarkVerificationExt(b *testing.B) {
 		Verify2(pub, message, signature)
 	}
 }
+
+func rnd32Bytes(t *testing.T) *[32]byte {
+	var d [32]byte
+	n, err := rand.Read(d[:])
+	assert.NoError(t, err, "no system entropy")
+	assert.Equal(t, 32, n, "expected 32 bytes of entropy")
+	return &d
+}
+
+func rnd32BytesBench(b *testing.B) *[32]byte {
+	var d [32]byte
+	n, err := rand.Read(d[:])
+	assert.NoError(b, err, "no system entropy")
+	assert.Equal(b, 32, n, "expected 32 bytes of entropy")
+	return &d
+}
+

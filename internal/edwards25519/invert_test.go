@@ -15,21 +15,44 @@ import (
 const INV_2 = "3618502788666131106986593281521497120428558179689953803000975469142727125495"
 const INV_17 = "851412420862619083996845478005058145983190159927047953647288345680641676587"
 
+
 func TestScMul(t *testing.T) {
-	var s, s1, a, b [32]byte
 
-	n, err := rand.Read(a[:])
-	assert.NoError(t, err, "no system entropy")
-	assert.Equal(t, 32, n, "expected 32 bytes of entropy")
+	var s, s1, zero [32]byte
+	a := rnd32Bytes(t)
+	b := rnd32Bytes(t)
 
-	n, err = rand.Read(b[:])
-	assert.NoError(t, err, "no system entropy")
-	assert.Equal(t, 32, n, "expected 32 bytes of entropy")
+	ScMul(&s, a, b)
+	ScMulAdd(&s1, a, b, &zero)
 
-	ScMul(&s, &a, &b)
-	var zero [32]byte
-	ScMulAdd(&s1, &a, &b, &zero)
 	assert.Equal(t, s, s1, "expected same output")
+}
+
+func BenchmarkScMul(bench *testing.B) {
+
+	var s [32]byte
+	a := rnd32BytesBench(bench)
+	b := rnd32BytesBench(bench)
+
+	bench.ResetTimer()
+
+	for i := 0; i < bench.N; i++ {
+		ScMul(&s, a, b)
+	}
+}
+
+func BenchmarkScMulAdd(bench *testing.B) {
+
+	var s, zero [32]byte
+
+	a := rnd32BytesBench(bench)
+	b := rnd32BytesBench(bench)
+
+	bench.ResetTimer()
+
+	for i := 0; i < bench.N; i++ {
+		ScMulAdd(&s, a, b, &zero)
+	}
 }
 
 func BenchmarkInvertModL(b *testing.B) {
@@ -118,4 +141,20 @@ func ToInt(b []byte) *big.Int {
 		res = res.Add(res, t)
 	}
 	return res
+}
+
+func rnd32Bytes(t *testing.T) *[32]byte {
+	var d [32]byte
+	n, err := rand.Read(d[:])
+	assert.NoError(t, err, "no system entropy")
+	assert.Equal(t, 32, n, "expected 32 bytes of entropy")
+	return &d
+}
+
+func rnd32BytesBench(b *testing.B) *[32]byte {
+	var d [32]byte
+	n, err := rand.Read(d[:])
+	assert.NoError(b, err, "no system entropy")
+	assert.Equal(b, 32, n, "expected 32 bytes of entropy")
+	return &d
 }
