@@ -34,8 +34,7 @@ func ExtractPublicKey(message, sig []byte) PublicKey
 ```
 
 ## Verify2
-Verify2 verifies a signature created with Sign2() using a public key
-extracted from the signature using ExtractPublicKey().
+Verify2 verifies a signature created with Sign2() using a public key extracted from the signature using ExtractPublicKey().
 
 ```
 func Verify2(publicKey PublicKey, message, sig []byte) bool
@@ -56,3 +55,6 @@ go test ./... -v
 go test -bench= .
 go test -bench . github.com/spacemeshos/ed25519/internal/edwards25519
 ```
+
+# Client Example
+https://github.com/spacemeshos/ed25519-client
