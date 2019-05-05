@@ -53,6 +53,20 @@ go test ./... -v
 
 # Benchmarking
 ```
-go test -bench= .
+go test -bench=.
 go test -bench . github.com/spacemeshos/ed25519/internal/edwards25519
+```
+
+```
+BenchmarkPublicKeyExtraction-12             3000            447515 ns/op
+
+BenchmarkSigning-12                        30000             46100 ns/op
+BenchmarkSigningExt-12                     30000             45357 ns/op
+
+BenchmarkKeyGeneration-12                  30000             44649 ns/op
+
+BenchmarkVerification-12                   10000            120082 ns/op
+BenchmarkVerificationExt-12                10000            118761 ns/op
+
+
 ```
