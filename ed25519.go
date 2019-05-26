@@ -20,6 +20,7 @@ import (
 	"crypto"
 	cryptorand "crypto/rand"
 	"crypto/sha512"
+	"encoding/binary"
 	"errors"
 	"github.com/spacemeshos/ed25519/internal/edwards25519"
 	"io"
@@ -90,6 +91,23 @@ func GenerateKey(rand io.Reader) (PublicKey, PrivateKey, error) {
 
 	return publicKey, privateKey, nil
 }
+
+// NewDerivedKeyFromSeed calculates a private key from a 32 bytes ranom seed, an integer index and salt
+func NewDerivedKeyFromSeed(seed []byte, index uint64, salt []byte) PrivateKey {
+	if l := len(seed); l != SeedSize {
+		panic("ed25519: bad seed length: " + strconv.Itoa(l))
+	}
+
+	digest := sha512.New()
+	digest.Write(seed)
+	digest.Write(salt)
+	buf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buf, index)
+	digest.Write(buf)
+
+	return NewKeyFromSeed(digest.Sum(nil))
+}
+
 
 // NewKeyFromSeed calculates a private key from a seed. It will panic if
 // len(seed) is not SeedSize. This function is provided for interoperability

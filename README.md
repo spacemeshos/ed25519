@@ -67,6 +67,7 @@ BenchmarkKeyGeneration-12                  30000             44649 ns/op
 
 BenchmarkVerification-12                   10000            120082 ns/op
 BenchmarkVerificationExt-12                10000            118761 ns/op
+```
 
 # Client Example
 https://github.com/spacemeshos/ed25519-client
