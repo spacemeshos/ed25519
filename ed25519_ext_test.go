@@ -92,8 +92,8 @@ func TestDerive(t *testing.T) {
 	var idx uint64 = 5
 	salt := []byte("Spacemesh rocks")
 
-	_ = NewDerivedKeyFromSeed(seed[:], idx, salt)
-
+	privateKey := NewDerivedKeyFromSeed(seed[:], idx, salt)
+	println(privateKey)
 }
 
 // Test Verify2 with a random message

@@ -34,8 +34,7 @@ func ExtractPublicKey(message, sig []byte) PublicKey
 ```
 
 ## Verify2
-Verify2 verifies a signature created with Sign2() using a public key
-extracted from the signature using ExtractPublicKey().
+Verify2 verifies a signature created with Sign2(), assuming the verifier possesses the public key.
 
 ```
 func Verify2(publicKey PublicKey, message, sig []byte) bool
