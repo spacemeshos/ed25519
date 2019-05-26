@@ -92,7 +92,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	return pubKey[:], nil
 }
 
-// NewDerivedKeyFromSeed calculates a private key from a 32 bytes ranom seed, an integer index and salt
+// NewDerivedKeyFromSeed calculates a private key from a 32 bytes random seed, an integer index and salt
 func NewDerivedKeyFromSeed(seed []byte, index uint64, salt []byte) PrivateKey {
 	if l := len(seed); l != SeedSize {
 		panic("ed25519: bad seed length: " + strconv.Itoa(l))
@@ -107,7 +107,6 @@ func NewDerivedKeyFromSeed(seed []byte, index uint64, salt []byte) PrivateKey {
 
 	return NewKeyFromSeed(digest.Sum(nil)[:SeedSize])
 }
-
 
 // Sign2 signs the message with privateKey and returns a signature.
 // The signature may be verified using VerifyEx(), if the signer's public key is known.
