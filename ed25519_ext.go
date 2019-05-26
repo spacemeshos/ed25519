@@ -6,6 +6,7 @@ package ed25519
 import (
 	"bytes"
 	"crypto/sha512"
+	"encoding/binary"
 	"errors"
 	"github.com/spacemeshos/ed25519/internal/edwards25519"
 	"strconv"
@@ -90,6 +91,23 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	EC_PK.ToBytes(&pubKey)
 	return pubKey[:], nil
 }
+
+// NewDerivedKeyFromSeed calculates a private key from a 32 bytes ranom seed, an integer index and salt
+func NewDerivedKeyFromSeed(seed []byte, index uint64, salt []byte) PrivateKey {
+	if l := len(seed); l != SeedSize {
+		panic("ed25519: bad seed length: " + strconv.Itoa(l))
+	}
+
+	digest := sha512.New()
+	digest.Write(seed)
+	digest.Write(salt)
+	buf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buf, index)
+	digest.Write(buf)
+
+	return NewKeyFromSeed(digest.Sum(nil)[:SeedSize])
+}
+
 
 // Sign2 signs the message with privateKey and returns a signature.
 // The signature may be verified using VerifyEx(), if the signer's public key is known.

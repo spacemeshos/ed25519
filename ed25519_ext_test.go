@@ -86,6 +86,16 @@ func TestSignVerify2(t *testing.T) {
 	}
 }
 
+func TestDerive(t *testing.T) {
+
+	seed := rnd32Bytes(t)
+	var idx uint64 = 5
+	salt := []byte ("Spacemesh rocks")
+
+	_ = NewDerivedKeyFromSeed(seed[:], idx, salt)
+
+}
+
 // Test Verify2 with a random message
 func TestSignVerify3(t *testing.T) {
 	var zero zeroReader
