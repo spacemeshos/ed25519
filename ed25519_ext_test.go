@@ -90,7 +90,7 @@ func TestDerive(t *testing.T) {
 
 	seed := rnd32Bytes(t)
 	var idx uint64 = 5
-	salt := []byte ("Spacemesh rocks")
+	salt := []byte("Spacemesh rocks")
 
 	_ = NewDerivedKeyFromSeed(seed[:], idx, salt)
 
