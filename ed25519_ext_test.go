@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -90,13 +89,9 @@ func TestSignVerify2(t *testing.T) {
 
 func TestDerive(t *testing.T) {
 	seed := rnd32Bytes(t)
-	fmt.Printf("%x\n", *seed)
 	var idx uint64 = 5
 	salt := []byte("Spacemesh rocks")
-
-	privateKey := NewDerivedKeyFromSeed(seed[:], idx, salt)
-	fmt.Printf("%x\n", privateKey)
-
+	_ = NewDerivedKeyFromSeed(seed[:], idx, salt)
 }
 
 func TestDerive1(t *testing.T) {
