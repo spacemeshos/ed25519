@@ -144,7 +144,7 @@ func TestMult(t *testing.T) {
 	var zero [32]byte
 	data := rnd32Bytes(t)
 	x := rnd32Bytes(t)
-	
+
 	// Instead of creating a point A from random bytes, we take A = b*B for random b.
 	// Note that A is random in <B>, but not in E -- need to fix this some how:
 	// Take A = a*A' (or = a*A' + b*B) for "full order" A'
@@ -179,12 +179,12 @@ func TestProjective2Extended(t *testing.T) {
 	//assert.True(t, ok, "failed to create extended group element")
 	//var A ProjectiveGroupElement
 	//A3.ToProjective(&A)
-	
+
 	var A3 ExtendedGroupElement
 	GeScalarMultBase(&A3, data)
 	var A ProjectiveGroupElement
 	A3.ToProjective(&A)
-	
+
 	var A2 ExtendedGroupElement
 	A.ProjBytesExt(&A2)
 

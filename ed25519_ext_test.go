@@ -6,6 +6,7 @@ package ed25519
 import (
 	"bytes"
 	"crypto/rand"
+	"encoding/hex"
 	"github.com/stretchr/testify/assert"
 	"testing"
 )
@@ -83,6 +84,29 @@ func TestSignVerify2(t *testing.T) {
 	wrongMessage := []byte("wrong message")
 	if Verify2(public, wrongMessage, sig) {
 		t.Errorf("signature of different message accepted")
+	}
+}
+
+func TestDerive(t *testing.T) {
+	seed := rnd32Bytes(t)
+	var idx uint64 = 5
+	salt := []byte("Spacemesh rocks")
+	_ = NewDerivedKeyFromSeed(seed[:], idx, salt)
+}
+
+func TestDerive1(t *testing.T) {
+	const expectedEncodedKey = "b6e1caa7ed8fb8b517dbbd5a49f7c9e76f33f0dd74100396207b640479d6fade2b0f080a354fd3c981630efe75bcbc5f4134895b749364f25badeae5a687950c"
+	const s = "8d03a58456bb1b45f696032444b09d476fa5406f998ed0a50e694ee8a40cfb09"
+	seed, err := hex.DecodeString(s)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	privateKey1 := NewDerivedKeyFromSeed(seed[:], 5, []byte("Spacemesh rocks"))
+	dst := make([]byte, hex.EncodedLen(len(privateKey1)))
+	hex.Encode(dst, privateKey1)
+	if string(dst) != expectedEncodedKey {
+		t.Errorf("Unexpected key")
 	}
 }
 
