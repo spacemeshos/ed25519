@@ -52,14 +52,13 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 
 	// Extract R = sig[32:] as a point on the curve (and compute the inverse of R)
 	var R edwards25519.ExtendedGroupElement
-	// @aviv, issue no. 1: s != sig[:32], so we extracted the wrong half of the sig into R :)
 	var r [32]byte
 	copy(r[:], sig[:32])
 	if ok := R.FromBytes(&r); !ok {
 		return nil, errors.New("failed to create extended group element from s")
 	}
 
-	// First we try without negation of R - @aviv: this was the second issue, the following lines make R -> -R
+	// The following lines make R -> -R
 	edwards25519.FeNeg(&R.X, &R.X)
 	edwards25519.FeNeg(&R.T, &R.T)
 	var A edwards25519.ProjectiveGroupElement
@@ -67,7 +66,8 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	edwards25519.GeDoubleScalarMultVartime(&A, &one, &R, &s)
 	A.ToExtended(&A2)
 
-	// We need to convert A from projective to extended group element - I cannot find this function defined
+	// THESE COMMENTS ARE OBSOLETE (afterwards we added ToExtended() ) -- KEPT TO REMIND OURSELVES THE LOGIC
+	// We need to convert A from projective to extended group element
 	// ToBytes takes projective
 	// FromBytes return extended
 	// Let's try....  [in general there should be a smarter way of doing this, so remember to look into this]
@@ -109,7 +109,7 @@ func NewDerivedKeyFromSeed(seed []byte, index uint64, salt []byte) PrivateKey {
 }
 
 // Sign2 signs the message with privateKey and returns a signature.
-// The signature may be verified using VerifyEx(), if the signer's public key is known.
+// The signature may be verified using Verify2(), if the signer's public key is known.
 // The signature returned by this method can be used together with the message
 // to extract the public key using ExtractPublicKey()
 // It will panic if len(privateKey) is not PrivateKeySize.
