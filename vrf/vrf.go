@@ -56,21 +56,6 @@ func (sk PrivateKey) expandSecret() (x, skhr *[32]byte) {
 	return
 }
 
-// Compute generates the vrf value for the byte slice m using the
-// underlying private key sk.
-func (sk PrivateKey) Compute(m []byte) []byte {
-	x, _ := sk.expandSecret()
-	var ii edwards25519.ExtendedGroupElement
-	var iiB [32]byte
-	edwards25519.GeScalarMult(&ii, x, hashToCurve(m))
-	ii.ToBytes(&iiB)
-
-	vrf := sha512.New()
-	vrf.Write(iiB[:]) // const length: Size
-	vrf.Write(m)
-	return vrf.Sum(nil)[:32]
-}
-
 func hashToCurve(m []byte) *edwards25519.ExtendedGroupElement {
 	// H(n) = (f(h(n))^8)
 	hmbH := sha512.Sum512(m)
@@ -84,9 +69,6 @@ func hashToCurve(m []byte) *edwards25519.ExtendedGroupElement {
 	return &hm
 }
 
-// Prove returns the vrf value and a proof such that
-// Verify(m, vrf, proof) == true. The vrf value is the
-// same as returned by Compute(m).
 func (sk PrivateKey) Prove(m []byte) (proof []byte) {
 	x, skhr := sk.expandSecret()
 	var sH, rH [64]byte
@@ -134,15 +116,12 @@ func (sk PrivateKey) Prove(m []byte) (proof []byte) {
 	return
 }
 
-func Vrf(m, proof []byte) []byte{
+func Vrf(proof []byte) []byte{
 	hash := sha512.New()
-	hash.Write(proof[64:])
-	hash.Write(m)
+	hash.Write(proof)
 	return hash.Sum(nil)[:Size]
 }
 
-// Verify returns true iff vrf=Compute(m) for the sk that
-// corresponds to pk.
 func (pkBytes PublicKey) Verify(m, proof []byte) bool {
 	if len(proof) != ProofSize || len(pkBytes) != PublicKeySize {
 		return false
