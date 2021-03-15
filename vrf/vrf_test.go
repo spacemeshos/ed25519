@@ -3,6 +3,7 @@ package vrf
 import (
 	"bytes"
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -14,8 +15,8 @@ func TestHonestComplete(t *testing.T) {
 	pk, _ := sk.Public()
 	alice := []byte("alice")
 	aliceVRF := sk.Compute(alice)
-	aliceVRFFromProof, aliceProof := sk.Prove(alice, false)
-
+	aliceProof := sk.Prove(alice)
+	aliceVRFFromProof := Vrf(alice,aliceProof)
 	fmt.Printf("pk:           %X\n", pk)
 	fmt.Printf("sk:           %X\n", sk)
 	fmt.Printf("alice(bytes): %X\n", alice)
@@ -23,7 +24,7 @@ func TestHonestComplete(t *testing.T) {
 	fmt.Printf("aliceProof:   %X\n", aliceProof)
 	fmt.Printf("aliceVRFFromProof:   %X\n", aliceVRFFromProof)
 
-	if !pk.Verify(alice, aliceVRF, aliceProof) {
+	if !pk.Verify(alice, aliceProof) {
 		t.Error("Gen -> Compute -> Prove -> Verify -> FALSE")
 	}
 	if !bytes.Equal(aliceVRF, aliceVRFFromProof) {
@@ -51,14 +52,17 @@ func TestFlipBitForgery(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	pk, _ := sk.Public()
+	//pk, _ := sk.Public()
 	alice := []byte("alice")
 	for i := 0; i < 32; i++ {
 		for j := uint(0); j < 8; j++ {
 			aliceVRF := sk.Compute(alice)
 			aliceVRF[i] ^= 1 << j
-			_, aliceProof := sk.Prove(alice, false)
-			if pk.Verify(alice, aliceVRF, aliceProof) {
+			aliceProof := sk.Prove(alice)
+			/*if pk.Verify(alice, aliceProof) {
+				t.Fatalf("forged by using aliceVRF[%d]^=%d:\n (sk=%x)", i, j, sk)
+			}*/
+			if reflect.DeepEqual(Vrf(alice,aliceProof),aliceVRF) {
 				t.Fatalf("forged by using aliceVRF[%d]^=%d:\n (sk=%x)", i, j, sk)
 			}
 		}
@@ -69,32 +73,48 @@ func sampleVectorTest(pk PublicKey, aliceVRF, aliceProof []byte, t *testing.T) {
 	alice := []byte{97, 108, 105, 99, 101}
 
 	// Positive test case
-	if !pk.Verify(alice, aliceVRF, aliceProof) {
+	if !pk.Verify(alice, aliceProof) {
 		t.Error("TestSampleVectors HonestVector Failed")
+	}
+
+	if !reflect.DeepEqual(Vrf(alice,aliceProof),aliceVRF) {
+		t.Error("TestSampleVectors Vrf Failed")
 	}
 
 	// Negative test cases - try increment the first byte of every vector
 	pk[0]++
-	if pk.Verify(alice, aliceVRF, aliceProof) {
+	if pk.Verify(alice, aliceProof) {
 		t.Error("TestSampleVectors ForgedVector (pk modified) Passed")
+	}
+	if reflect.DeepEqual(Vrf(alice,aliceProof),aliceVRF) {
+		t.Error("TestSampleVectors Vrf Passed")
 	}
 	pk[0]--
 
 	alice[0]++
-	if pk.Verify(alice, aliceVRF, aliceProof) {
+	if pk.Verify(alice, aliceProof) {
 		t.Error("TestSampleVectors ForgedVector (alice modified) Passed")
+	}
+	if reflect.DeepEqual(Vrf(alice,aliceProof),aliceVRF) {
+		t.Error("TestSampleVectors Vrf Passed")
 	}
 	alice[0]--
 
 	aliceVRF[0]++
-	if pk.Verify(alice, aliceVRF, aliceProof) {
+	if pk.Verify(alice, aliceProof) {
 		t.Error("TestSampleVectors ForgedVector (aliceVRF modified) Passed")
+	}
+	if reflect.DeepEqual(Vrf(alice,aliceProof),aliceVRF) {
+		t.Error("TestSampleVectors Vrf Passed")
 	}
 	aliceVRF[0]--
 
 	aliceProof[0]++
-	if pk.Verify(alice, aliceVRF, aliceProof) {
+	if pk.Verify(alice, aliceProof) {
 		t.Error("TestSampleVectors ForgedVector (aliceProof modified) Passed")
+	}
+	if reflect.DeepEqual(Vrf(alice,aliceProof),aliceVRF) {
+		t.Error("TestSampleVectors Vrf Passed")
 	}
 	aliceProof[0]--
 }
@@ -153,7 +173,7 @@ func BenchmarkProve(b *testing.B) {
 	alice := []byte("alice")
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		sk.Prove(alice, false)
+		sk.Prove(alice)
 	}
 }
 
@@ -163,12 +183,12 @@ func BenchmarkVerify(b *testing.B) {
 		b.Fatal(err)
 	}
 	alice := []byte("alice")
-	aliceVRF := sk.Compute(alice)
-	_, aliceProof := sk.Prove(alice, false)
+	_ = sk.Compute(alice)
+	aliceProof := sk.Prove(alice)
 	pk, _ := sk.Public()
 	b.ResetTimer()
 	for n := 0; n < b.N; n++ {
-		pk.Verify(alice, aliceVRF, aliceProof)
+		pk.Verify(alice, aliceProof)
 	}
 }
 

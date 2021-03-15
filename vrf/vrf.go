@@ -2,24 +2,8 @@ package vrf
 
 // Package ed25519 implements a verifiable random function using the Edwards form
 // of Curve25519, SHA512 and the Elligator map.
-//
-//     E is Curve25519 (in Edwards coordinates), h is SHA512.
-//     f is the elligator map (bytes->E) that covers half of E.
-//     8 is the cofactor of E, the group order is 8*l for prime l.
-//     Setup : the prover publicly commits to a public key (P : E)
-//     H : names -> E
-//         H(n) = f(h(n))^8
-//     VRF : keys -> names -> vrfs
-//         VRF_x(n) = h(n, H(n)^x))
-//     Prove : keys -> names -> proofs
-//         Prove_x(n) = tuple(c=h(n, g^r, H(n)^r), t=r-c*x, ii=H(n)^x)
-//             where r = h(x, n) is used as a source of randomness
-//     Check : E -> names -> vrfs -> proofs -> bool
-//         Check(P, n, vrf, (c,t,ii)) = vrf == h(n, ii)
-//                                     && c == h(n, g^t*P^c, H(n)^t*ii^c)
 
 import (
-	"bytes"
 	"crypto/rand"
 	"crypto/sha512"
 	"errors"
@@ -103,7 +87,7 @@ func hashToCurve(m []byte) *edwards25519.ExtendedGroupElement {
 // Prove returns the vrf value and a proof such that
 // Verify(m, vrf, proof) == true. The vrf value is the
 // same as returned by Compute(m).
-func (sk PrivateKey) Prove(m []byte, randSrc bool) (vrf, proof []byte) {
+func (sk PrivateKey) Prove(m []byte) (proof []byte) {
 	x, skhr := sk.expandSecret()
 	var sH, rH [64]byte
 	var r, s, minusS, t, gB, grB, hrB, hxB, hB [32]byte
@@ -119,15 +103,9 @@ func (sk PrivateKey) Prove(m []byte, randSrc bool) (vrf, proof []byte) {
 	hash.Write(skhr[:])
 	hash.Write(sk[32:]) // public key, as in ed25519
 	hash.Write(m)
-	if randSrc {
-		b := make([]byte, len(rH))
-		rand.Read(b)
-		hash.Sum(b)
-	}
 	hash.Sum(rH[:0])
-	hash.Reset()
-	edwards25519.ScReduce(&r, &rH)
 
+	edwards25519.ScReduce(&r, &rH)
 	edwards25519.GeScalarMultBase(&gr, &r)
 	edwards25519.GeScalarMult(&hr, &r, h)
 	gr.ToBytes(&grB)
@@ -135,6 +113,7 @@ func (sk PrivateKey) Prove(m []byte, randSrc bool) (vrf, proof []byte) {
 	gB = edwards25519.BaseBytes
 
 	// H2(g, h, g^x, h^x, g^r, h^r, m)
+	hash.Reset()
 	hash.Write(gB[:])
 	hash.Write(hB[:])
 	hash.Write(sk[32:]) // ed25519 public-key
@@ -145,7 +124,6 @@ func (sk PrivateKey) Prove(m []byte, randSrc bool) (vrf, proof []byte) {
 	hash.Sum(sH[:0])
 	hash.Reset()
 	edwards25519.ScReduce(&s, &sH)
-
 	edwards25519.ScNeg(&minusS, &s)
 	edwards25519.ScMulAdd(&t, x, &minusS, &r)
 
@@ -153,34 +131,27 @@ func (sk PrivateKey) Prove(m []byte, randSrc bool) (vrf, proof []byte) {
 	copy(proof[:32], s[:])
 	copy(proof[32:64], t[:])
 	copy(proof[64:96], hxB[:])
-
-	hash.Reset()
-	hash.Write(hxB[:])
-	hash.Write(m)
-	vrf = hash.Sum(nil)[:Size]
 	return
+}
+
+func Vrf(m, proof []byte) []byte{
+	hash := sha512.New()
+	hash.Write(proof[64:])
+	hash.Write(m)
+	return hash.Sum(nil)[:Size]
 }
 
 // Verify returns true iff vrf=Compute(m) for the sk that
 // corresponds to pk.
-func (pkBytes PublicKey) Verify(m, vrfBytes, proof []byte) bool {
-	if len(proof) != ProofSize || len(vrfBytes) != Size || len(pkBytes) != PublicKeySize {
+func (pkBytes PublicKey) Verify(m, proof []byte) bool {
+	if len(proof) != ProofSize || len(pkBytes) != PublicKeySize {
 		return false
 	}
-	var pk, s, sRef, t, vrf, hxB, hB, gB, ABytes, BBytes [32]byte
-	copy(vrf[:], vrfBytes)
+	var pk, s, sRef, t, hxB, hB, gB, ABytes, BBytes [32]byte
 	copy(pk[:], pkBytes[:])
 	copy(s[:32], proof[:32])
 	copy(t[:32], proof[32:64])
 	copy(hxB[:], proof[64:96])
-
-	hash := sha512.New()
-	hash.Write(hxB[:]) // const length
-	hash.Write(m)
-	if !bytes.Equal(hash.Sum(nil)[:Size], vrf[:Size]) {
-		return false
-	}
-	hash.Reset()
 
 	var P, B, ii, iic edwards25519.ExtendedGroupElement
 	var A, hmtP, iicP edwards25519.ProjectiveGroupElement
@@ -205,6 +176,7 @@ func (pkBytes PublicKey) Verify(m, vrfBytes, proof []byte) bool {
 
 	var sH [64]byte
 	// sRef = H2(g, h, g^x, v, g^t路G^s,H1(m)^t路v^s, m), with v=H1(m)^x=h^x
+	hash := sha512.New()
 	hash.Write(gB[:])
 	hash.Write(hB[:])
 	hash.Write(pkBytes)
