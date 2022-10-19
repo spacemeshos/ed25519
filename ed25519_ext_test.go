@@ -7,8 +7,9 @@ import (
 	"bytes"
 	"crypto/rand"
 	"encoding/hex"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // Test with a fixed message

@@ -6,9 +6,10 @@ package edwards25519
 import (
 	"bytes"
 	"crypto/rand"
-	"github.com/stretchr/testify/assert"
 	"math/big"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 // test vectors
