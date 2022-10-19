@@ -8,8 +8,9 @@ import (
 	"crypto/sha512"
 	"encoding/binary"
 	"errors"
-	"github.com/spacemeshos/ed25519/internal/edwards25519"
 	"strconv"
+
+	"github.com/spacemeshos/ed25519/internal/edwards25519"
 )
 
 // ExtractPublicKey extracts the signer's public key given a message and its signature.

@@ -21,9 +21,10 @@ import (
 	cryptorand "crypto/rand"
 	"crypto/sha512"
 	"errors"
-	"github.com/spacemeshos/ed25519/internal/edwards25519"
 	"io"
 	"strconv"
+
+	"github.com/spacemeshos/ed25519/internal/edwards25519"
 )
 
 const (
