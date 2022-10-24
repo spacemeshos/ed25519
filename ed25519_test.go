@@ -16,6 +16,7 @@ import (
 	"testing"
 
 	"github.com/spacemeshos/ed25519/internal/edwards25519"
+	"github.com/stretchr/testify/require"
 )
 
 type zeroReader struct{}
@@ -28,11 +29,12 @@ func (zeroReader) Read(buf []byte) (int, error) {
 }
 
 func TestUnmarshalMarshal(t *testing.T) {
-	pub, _, _ := GenerateKey(rand.Reader)
+	priv, err := GenerateKey(rand.Reader)
+	require.NoError(t, err)
 
 	var A edwards25519.ExtendedGroupElement
 	var pubBytes [32]byte
-	copy(pubBytes[:], pub)
+	copy(pubBytes[:], priv.Public().(PublicKey).Bytes())
 	if !A.FromBytes(&pubBytes) {
 		t.Fatalf("ExtendedGroupElement.FromBytes failed")
 	}
@@ -47,24 +49,24 @@ func TestUnmarshalMarshal(t *testing.T) {
 
 func TestSignVerify(t *testing.T) {
 	var zero zeroReader
-	public, private, _ := GenerateKey(zero)
+	private, _ := GenerateKey(zero)
 
 	message := []byte("test message")
 	sig := Sign(private, message)
-	if !Verify(public, message, sig) {
+	if !Verify(private.Public(), message, sig) {
 		t.Errorf("valid signature rejected")
 	}
 
 	wrongMessage := []byte("wrong message")
-	if Verify(public, wrongMessage, sig) {
+	if Verify(private.Public(), wrongMessage, sig) {
 		t.Errorf("signature of different message accepted")
 	}
 }
 
 func TestCryptoSigner(t *testing.T) {
 	var zero zeroReader
-	public, private, _ := GenerateKey(zero)
-
+	private, _ := GenerateKey(zero)
+	public := private.Public().(PublicKey)
 	signer := crypto.Signer(private)
 
 	publicInterface := signer.Public()
@@ -73,8 +75,8 @@ func TestCryptoSigner(t *testing.T) {
 		t.Fatalf("expected PublicKey from Public() but got %T", publicInterface)
 	}
 
-	if !bytes.Equal(public, public2) {
-		t.Errorf("public keys do not match: original:%x vs Public():%x", public, public2)
+	if !bytes.Equal(public.key, public2.key) {
+		t.Errorf("public keys do not match: original: %x vs Public(): %x", public.key, public2.key)
 	}
 
 	message := []byte("message")
@@ -127,30 +129,30 @@ func TestGolden(t *testing.T) {
 			t.Fatalf("bad public key length on line %d: got %d bytes", lineNo, l)
 		}
 
-		var priv [PrivateKeySize]byte
-		copy(priv[:], privBytes)
-		copy(priv[32:], pubKey)
-
-		sig2 := Sign(priv[:], msg)
+		key := &PrivateKey{key: privBytes}
+		sig2 := Sign(key, msg)
 		if !bytes.Equal(sig, sig2[:]) {
 			t.Errorf("different signature result on line %d: %x vs %x", lineNo, sig, sig2)
 		}
 
-		if !Verify(pubKey, msg, sig2) {
+		if !Verify(key.Public(), msg, sig2) {
 			t.Errorf("signature failed to verify on line %d", lineNo)
 		}
 
-		priv2 := NewKeyFromSeed(priv[:32])
-		if !bytes.Equal(priv[:], priv2) {
-			t.Errorf("recreating key pair gave different private key on line %d: %x vs %x", lineNo, priv[:], priv2)
+		priv2, err := NewKeyFromSeed(privBytes[:SeedSize])
+		if err != nil {
+			t.Fatalf("NewKeyFromSeed failed on line %d: %s", lineNo, err)
+		}
+		if !bytes.Equal(key.key, priv2.key) {
+			t.Errorf("recreating key pair gave different private key on line %d: %x vs %x", lineNo, key.key[:], priv2.key)
 		}
 
-		if pubKey2 := priv2.Public().(PublicKey); !bytes.Equal(pubKey, pubKey2) {
-			t.Errorf("recreating key pair gave different public key on line %d: %x vs %x", lineNo, pubKey, pubKey2)
+		if pubKey2 := priv2.Public().(PublicKey); !bytes.Equal(key.Public().(PublicKey).Bytes(), pubKey2.key) {
+			t.Errorf("recreating key pair gave different public key on line %d: %x vs %x", lineNo, key.Public().(PublicKey).Bytes(), pubKey2.key)
 		}
 
-		if seed := priv2.Seed(); !bytes.Equal(priv[:32], seed) {
-			t.Errorf("recreating key pair gave different seed on line %d: %x vs %x", lineNo, priv[:32], seed)
+		if seed := priv2.Seed(); !bytes.Equal(key.key[:32], seed) {
+			t.Errorf("recreating key pair gave different seed on line %d: %x vs %x", lineNo, key.key[:32], seed)
 		}
 	}
 
@@ -177,8 +179,11 @@ func TestMalleability(t *testing.T) {
 		0x22, 0xab, 0xbe, 0xe6, 0x85, 0xfd, 0xa4, 0x42, 0x0f, 0x88, 0x34,
 		0xb1, 0x08, 0xc3, 0xbd, 0xae, 0x36, 0x9e, 0xf5, 0x49, 0xfa,
 	}
+	key := PublicKey{
+		key: publicKey,
+	}
 
-	if Verify(publicKey, msg, sig) {
+	if Verify(key, msg, sig) {
 		t.Fatal("non-canonical signature accepted")
 	}
 }
@@ -186,7 +191,7 @@ func TestMalleability(t *testing.T) {
 func BenchmarkKeyGeneration(b *testing.B) {
 	var zero zeroReader
 	for i := 0; i < b.N; i++ {
-		if _, _, err := GenerateKey(zero); err != nil {
+		if _, err := GenerateKey(zero); err != nil {
 			b.Fatal(err)
 		}
 	}
@@ -194,7 +199,7 @@ func BenchmarkKeyGeneration(b *testing.B) {
 
 func BenchmarkSigning(b *testing.B) {
 	var zero zeroReader
-	_, priv, err := GenerateKey(zero)
+	priv, err := GenerateKey(zero)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -207,7 +212,7 @@ func BenchmarkSigning(b *testing.B) {
 
 func BenchmarkVerification(b *testing.B) {
 	var zero zeroReader
-	pub, priv, err := GenerateKey(zero)
+	priv, err := GenerateKey(zero)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -215,6 +220,6 @@ func BenchmarkVerification(b *testing.B) {
 	signature := Sign(priv, message)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Verify(pub, message, signature)
+		Verify(priv.Public, message, signature)
 	}
 }

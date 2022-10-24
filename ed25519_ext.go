@@ -5,10 +5,10 @@ package ed25519
 
 import (
 	"bytes"
+	"crypto"
 	"crypto/sha512"
 	"encoding/binary"
 	"errors"
-	"strconv"
 
 	"github.com/spacemeshos/ed25519/internal/edwards25519"
 )
@@ -19,7 +19,7 @@ import (
 func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 
 	if l := len(sig); l != SignatureSize || sig[63]&224 != 0 {
-		return nil, errors.New("ed25519: bad signature format")
+		return PublicKey{}, errors.New("ed25519: bad signature format")
 	}
 
 	h := sha512.New()
@@ -38,13 +38,13 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 
 	var s [32]byte
 	if l := copy(s[:], sig[32:]); l != PublicKeySize {
-		return nil, errors.New("memory copy failed")
+		return PublicKey{}, errors.New("memory copy failed")
 	}
 
 	// https://tools.ietf.org/html/rfc8032#section-5.1.7 requires that s be in
 	// the range [0, order) in order to prevent signature malleability.
 	if !edwards25519.ScMinimal(&s) {
-		return nil, errors.New("invalid signature")
+		return PublicKey{}, errors.New("invalid signature")
 	}
 
 	// var zero [32]byte
@@ -56,7 +56,7 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 	var r [32]byte
 	copy(r[:], sig[:32])
 	if ok := R.FromBytes(&r); !ok {
-		return nil, errors.New("failed to create extended group element from s")
+		return PublicKey{}, errors.New("failed to create extended group element from s")
 	}
 
 	// The following lines make R -> -R
@@ -90,15 +90,11 @@ func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
 
 	// EC_PK is supposed to be the public key as an elliptic curve point, we apply ToBytes
 	EC_PK.ToBytes(&pubKey)
-	return pubKey[:], nil
+	return PublicKey{pubKey[:]}, nil
 }
 
 // NewDerivedKeyFromSeed calculates a private key from a 32 bytes random seed, an integer index and salt
-func NewDerivedKeyFromSeed(seed []byte, index uint64, salt []byte) PrivateKey {
-	if l := len(seed); l != SeedSize {
-		panic("ed25519: bad seed length: " + strconv.Itoa(l))
-	}
-
+func NewDerivedKeyFromSeed(seed []byte, index uint64, salt []byte) (*PrivateKey, error) {
 	digest := sha512.New()
 	digest.Write(seed)
 	digest.Write(salt)
@@ -114,13 +110,9 @@ func NewDerivedKeyFromSeed(seed []byte, index uint64, salt []byte) PrivateKey {
 // The signature returned by this method can be used together with the message
 // to extract the public key using ExtractPublicKey()
 // It will panic if len(privateKey) is not PrivateKeySize.
-func Sign2(privateKey PrivateKey, message []byte) []byte {
+func Sign2(privateKey *PrivateKey, message []byte) []byte {
 
 	// COMMENTS in the code refer to Algorithm 1 in https://eprint.iacr.org/2017/985.pdf
-
-	if l := len(privateKey); l != PrivateKeySize {
-		panic("ed25519: bad private key length: " + strconv.Itoa(l))
-	}
 
 	h := sha512.New()
 
@@ -128,7 +120,7 @@ func Sign2(privateKey PrivateKey, message []byte) []byte {
 	// it seems that the first 32 bytes is 'a' as in line 2 in "Algorithm 1",
 	// and the last 32 bytes is the (encoding) of the public key (elliptic curve point,
 	// as in line 4 in "Algorithm 1").
-	h.Write(privateKey[:32])
+	h.Write(privateKey.key[:SeedSize])
 
 	var digest1, messageDigest, hramDigest [64]byte
 	var expandedSecretKey [32]byte
@@ -186,9 +178,10 @@ func Sign2(privateKey PrivateKey, message []byte) []byte {
 
 // Verify2 verifies a signature created with Sign2(),
 // assuming the verifier possesses the public key.
-func Verify2(publicKey PublicKey, message, sig []byte) bool {
-	if l := len(publicKey); l != PublicKeySize {
-		panic("ed25519: bad public key length: " + strconv.Itoa(l))
+func Verify2(publicKey crypto.PublicKey, message, sig []byte) bool {
+	key, ok := publicKey.(PublicKey)
+	if !ok {
+		return false
 	}
 
 	if len(sig) != SignatureSize || sig[63]&224 != 0 {
@@ -197,7 +190,7 @@ func Verify2(publicKey PublicKey, message, sig []byte) bool {
 
 	var A edwards25519.ExtendedGroupElement
 	var publicKeyBytes [32]byte
-	copy(publicKeyBytes[:], publicKey)
+	copy(publicKeyBytes[:], key.Bytes()[:])
 	if !A.FromBytes(&publicKeyBytes) {
 		return false
 	}

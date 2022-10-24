@@ -15,7 +15,7 @@ import (
 // Test with a fixed message
 func TestPublicKeyExtraction(t *testing.T) {
 	var zero zeroReader
-	public, private, _ := GenerateKey(zero)
+	private, _ := GenerateKey(zero)
 	message := []byte("test message")
 
 	// sign the message
@@ -26,7 +26,7 @@ func TestPublicKeyExtraction(t *testing.T) {
 
 	// ensure extracted key is the same as public key created by GenerateKey()
 	assert.NoError(t, err)
-	assert.EqualValues(t, public, public1, "expected same public key")
+	assert.EqualValues(t, private.Public().(PublicKey).Bytes(), public1.key, "expected same public key")
 
 	// attempt to extract the public key from the same sig but a wrong message
 	wrongMessage := []byte("wrong message")
@@ -34,7 +34,7 @@ func TestPublicKeyExtraction(t *testing.T) {
 
 	// we expect the extracted key to not be the same as the correct signer public key
 	assert.NoError(t, err)
-	if bytes.Compare(public, public2) == 0 {
+	if bytes.Equal(private.Public().(PublicKey).Bytes(), public2.key) {
 		t.Errorf("expected different public keys")
 	}
 }
@@ -42,7 +42,7 @@ func TestPublicKeyExtraction(t *testing.T) {
 // Test with a random message
 func TestPublicKeyExtraction1(t *testing.T) {
 	var zero zeroReader
-	public, private, _ := GenerateKey(zero)
+	private, _ := GenerateKey(zero)
 
 	message := rnd32Bytes(t)
 
@@ -54,7 +54,7 @@ func TestPublicKeyExtraction1(t *testing.T) {
 
 	// ensure extracted key is the same as public key created by GenerateKey()
 	assert.NoError(t, err)
-	assert.EqualValues(t, public, public1, "expected same public key")
+	assert.EqualValues(t, private.Public().(PublicKey).Bytes(), public1.key, "expected same public key")
 
 	// attempt to extract the public key from the same sig but a wrong message
 
@@ -63,7 +63,7 @@ func TestPublicKeyExtraction1(t *testing.T) {
 
 	// we expect the extracted key to not be the same as the correct signer public key
 	assert.NoError(t, err)
-	if bytes.Compare(public, public2) == 0 {
+	if bytes.Equal(private.Public().(PublicKey).Bytes(), public2.key) {
 		t.Errorf("expected different public keys")
 	}
 }
@@ -71,19 +71,19 @@ func TestPublicKeyExtraction1(t *testing.T) {
 // Test Verify2 with a fixed message
 func TestSignVerify2(t *testing.T) {
 	var zero zeroReader
-	public, private, _ := GenerateKey(zero)
+	private, _ := GenerateKey(zero)
 
 	message := []byte("test message")
 
 	// sign and verify a message using the public key created by GenerateKey()
 	sig := Sign2(private, message)
-	if !Verify2(public, message, sig) {
+	if !Verify2(private.Public(), message, sig) {
 		t.Errorf("valid signature rejected")
 	}
 
 	// Verification of the signature on a wrong message should fail
 	wrongMessage := []byte("wrong message")
-	if Verify2(public, wrongMessage, sig) {
+	if Verify2(private.Public(), wrongMessage, sig) {
 		t.Errorf("signature of different message accepted")
 	}
 }
@@ -92,7 +92,7 @@ func TestDerive(t *testing.T) {
 	seed := rnd32Bytes(t)
 	var idx uint64 = 5
 	salt := []byte("Spacemesh rocks")
-	_ = NewDerivedKeyFromSeed(seed[:], idx, salt)
+	_, _ = NewDerivedKeyFromSeed(seed[:], idx, salt)
 }
 
 func TestDerive1(t *testing.T) {
@@ -103,9 +103,10 @@ func TestDerive1(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	privateKey1 := NewDerivedKeyFromSeed(seed[:], 5, []byte("Spacemesh rocks"))
-	dst := make([]byte, hex.EncodedLen(len(privateKey1)))
-	hex.Encode(dst, privateKey1)
+	privateKey1, _ := NewDerivedKeyFromSeed(seed[:], 5, []byte("Spacemesh rocks"))
+	keyBytes := privateKey1.Bytes()
+	dst := make([]byte, hex.EncodedLen(len(keyBytes)))
+	hex.Encode(dst, keyBytes)
 	if string(dst) != expectedEncodedKey {
 		t.Errorf("Unexpected key")
 	}
@@ -114,26 +115,26 @@ func TestDerive1(t *testing.T) {
 // Test Verify2 with a random message
 func TestSignVerify3(t *testing.T) {
 	var zero zeroReader
-	public, private, _ := GenerateKey(zero)
+	private, _ := GenerateKey(zero)
 
 	message := rnd32Bytes(t)
 
 	// sign and verify a message using the public key created by GenerateKey()
 	sig := Sign2(private, message[:])
-	if !Verify2(public, message[:], sig) {
+	if !Verify2(private.Public(), message[:], sig) {
 		t.Errorf("valid signature rejected")
 	}
 
 	// Verification of the signature on a wrong message should fail
 	wrongMessage := rnd32Bytes(t)
-	if Verify2(public, wrongMessage[:], sig) {
+	if Verify2(private.Public(), wrongMessage[:], sig) {
 		t.Errorf("signature of different message accepted")
 	}
 }
 
 func BenchmarkPublicKeyExtraction(b *testing.B) {
 	var zero zeroReader
-	_, priv, err := GenerateKey(zero)
+	priv, err := GenerateKey(zero)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -147,7 +148,7 @@ func BenchmarkPublicKeyExtraction(b *testing.B) {
 
 func BenchmarkSigningExt(b *testing.B) {
 	var zero zeroReader
-	_, priv, err := GenerateKey(zero)
+	priv, err := GenerateKey(zero)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -160,7 +161,7 @@ func BenchmarkSigningExt(b *testing.B) {
 
 func BenchmarkVerificationExt(b *testing.B) {
 	var zero zeroReader
-	pub, priv, err := GenerateKey(zero)
+	priv, err := GenerateKey(zero)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -168,7 +169,7 @@ func BenchmarkVerificationExt(b *testing.B) {
 	signature := Sign2(priv, message)
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		Verify2(pub, message, signature)
+		Verify2(priv.Public(), message, signature)
 	}
 }
 

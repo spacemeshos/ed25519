@@ -39,25 +39,41 @@ const (
 )
 
 // PublicKey is the type of Ed25519 public keys.
-type PublicKey []byte
+type PublicKey struct {
+	key []byte
+}
+
+func (pub PublicKey) Bytes() []byte {
+	bytes := make([]byte, PublicKeySize)
+	copy(bytes, pub.key)
+	return bytes
+}
 
 // PrivateKey is the type of Ed25519 private keys. It implements crypto.Signer.
-type PrivateKey []byte
+type PrivateKey struct {
+	key []byte
+}
 
 // Public returns the PublicKey corresponding to priv.
-func (priv PrivateKey) Public() crypto.PublicKey {
-	publicKey := make([]byte, PublicKeySize)
-	copy(publicKey, priv[32:])
-	return PublicKey(publicKey)
+func (priv *PrivateKey) Public() crypto.PublicKey {
+	bytes := make([]byte, PublicKeySize)
+	copy(bytes, priv.key[SeedSize:])
+	return PublicKey{key: bytes}
 }
 
 // Seed returns the private key seed corresponding to priv. It is provided for
 // interoperability with RFC 8032. RFC 8032's private keys correspond to seeds
 // in this package.
 func (priv PrivateKey) Seed() []byte {
-	seed := make([]byte, SeedSize)
-	copy(seed, priv[:32])
-	return seed
+	bytes := make([]byte, SeedSize)
+	copy(bytes, priv.key[:SeedSize])
+	return bytes
+}
+
+func (priv PrivateKey) Bytes() []byte {
+	bytes := make([]byte, PrivateKeySize)
+	copy(bytes, priv.key[:])
+	return priv.key
 }
 
 // Sign signs the given message with priv.
@@ -65,7 +81,7 @@ func (priv PrivateKey) Seed() []byte {
 // handle pre-hashed messages. Thus opts.HashFunc() must return zero to
 // indicate the message hasn't been hashed. This can be achieved by passing
 // crypto.Hash(0) as the value for opts.
-func (priv PrivateKey) Sign(rand io.Reader, message []byte, opts crypto.SignerOpts) (signature []byte, err error) {
+func (priv *PrivateKey) Sign(rand io.Reader, message []byte, opts crypto.SignerOpts) (signature []byte, err error) {
 	if opts.HashFunc() != crypto.Hash(0) {
 		return nil, errors.New("ed25519: cannot sign hashed message")
 	}
@@ -75,30 +91,26 @@ func (priv PrivateKey) Sign(rand io.Reader, message []byte, opts crypto.SignerOp
 
 // GenerateKey generates a public/private key pair using entropy from rand.
 // If rand is nil, crypto/rand.Reader will be used.
-func GenerateKey(rand io.Reader) (PublicKey, PrivateKey, error) {
+func GenerateKey(rand io.Reader) (*PrivateKey, error) {
 	if rand == nil {
 		rand = cryptorand.Reader
 	}
 
 	seed := make([]byte, SeedSize)
 	if _, err := io.ReadFull(rand, seed); err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	privateKey := NewKeyFromSeed(seed)
-	publicKey := make([]byte, PublicKeySize)
-	copy(publicKey, privateKey[32:])
-
-	return publicKey, privateKey, nil
+	return NewKeyFromSeed(seed)
 }
 
 // NewKeyFromSeed calculates a private key from a seed. It will panic if
 // len(seed) is not SeedSize. This function is provided for interoperability
 // with RFC 8032. RFC 8032's private keys correspond to seeds in this
 // package.
-func NewKeyFromSeed(seed []byte) PrivateKey {
+func NewKeyFromSeed(seed []byte) (*PrivateKey, error) {
 	if l := len(seed); l != SeedSize {
-		panic("ed25519: bad seed length: " + strconv.Itoa(l))
+		return nil, errors.New("ed25519: bad seed length: " + strconv.Itoa(l))
 	}
 
 	digest := sha512.Sum512(seed)
@@ -115,20 +127,19 @@ func NewKeyFromSeed(seed []byte) PrivateKey {
 
 	privateKey := make([]byte, PrivateKeySize)
 	copy(privateKey, seed)
-	copy(privateKey[32:], publicKeyBytes[:])
+	copy(privateKey[SeedSize:], publicKeyBytes[:])
 
-	return privateKey
+	publicKey := make([]byte, PublicKeySize)
+	copy(publicKey, publicKeyBytes[:])
+
+	return &PrivateKey{privateKey}, nil
 }
 
 // Sign signs the message with privateKey and returns a signature. It will
 // panic if len(privateKey) is not PrivateKeySize.
-func Sign(privateKey PrivateKey, message []byte) []byte {
-	if l := len(privateKey); l != PrivateKeySize {
-		panic("ed25519: bad private key length: " + strconv.Itoa(l))
-	}
-
+func Sign(privateKey *PrivateKey, message []byte) []byte {
 	h := sha512.New()
-	h.Write(privateKey[:32])
+	h.Write(privateKey.Seed())
 
 	var digest1, messageDigest, hramDigest [64]byte
 	var expandedSecretKey [32]byte
@@ -153,7 +164,7 @@ func Sign(privateKey PrivateKey, message []byte) []byte {
 
 	h.Reset()
 	h.Write(encodedR[:])
-	h.Write(privateKey[32:])
+	h.Write(privateKey.key[SeedSize:])
 	h.Write(message)
 	h.Sum(hramDigest[:0])
 	var hramDigestReduced [32]byte
@@ -171,9 +182,10 @@ func Sign(privateKey PrivateKey, message []byte) []byte {
 
 // Verify reports whether sig is a valid signature of message by publicKey. It
 // will panic if len(publicKey) is not PublicKeySize.
-func Verify(publicKey PublicKey, message, sig []byte) bool {
-	if l := len(publicKey); l != PublicKeySize {
-		panic("ed25519: bad public key length: " + strconv.Itoa(l))
+func Verify(publicKey crypto.PublicKey, message, sig []byte) bool {
+	key, ok := publicKey.(PublicKey)
+	if !ok {
+		return false
 	}
 
 	if len(sig) != SignatureSize || sig[63]&224 != 0 {
@@ -182,7 +194,7 @@ func Verify(publicKey PublicKey, message, sig []byte) bool {
 
 	var A edwards25519.ExtendedGroupElement
 	var publicKeyBytes [32]byte
-	copy(publicKeyBytes[:], publicKey)
+	copy(publicKeyBytes[:], key.Bytes())
 	if !A.FromBytes(&publicKeyBytes) {
 		return false
 	}
@@ -191,7 +203,7 @@ func Verify(publicKey PublicKey, message, sig []byte) bool {
 
 	h := sha512.New()
 	h.Write(sig[:32])
-	h.Write(publicKey[:])
+	h.Write(publicKeyBytes[:])
 	h.Write(message)
 	var digest [64]byte
 	h.Sum(digest[:0])
