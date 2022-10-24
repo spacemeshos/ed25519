@@ -43,15 +43,41 @@ type PublicKey struct {
 	key []byte
 }
 
+func NewPublicKey(key []byte) (PublicKey, error) {
+	if len(key) != PublicKeySize {
+		return PublicKey{}, errors.New("ed25519: bad public key length")
+	}
+
+	return PublicKey{key: key}, nil
+}
+
 func (pub PublicKey) Bytes() []byte {
 	bytes := make([]byte, PublicKeySize)
 	copy(bytes, pub.key)
 	return bytes
 }
 
+func (pub PublicKey) Equal(other crypto.PublicKey) bool {
+	otherPub, ok := other.(PublicKey)
+	if !ok {
+		return false
+	}
+
+	return bytes.Equal(pub.key, otherPub.key)
+}
+
 // PrivateKey is the type of Ed25519 private keys. It implements crypto.Signer.
 type PrivateKey struct {
 	key []byte
+}
+
+func (priv PrivateKey) Equal(other crypto.PrivateKey) bool {
+	otherPriv, ok := other.(PrivateKey)
+	if !ok {
+		return false
+	}
+
+	return bytes.Equal(priv.key, otherPriv.key)
 }
 
 // Public returns the PublicKey corresponding to priv.
