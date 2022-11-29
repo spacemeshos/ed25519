@@ -17,7 +17,6 @@ import (
 // Note that signature must be created using Sign2() and NOT using Sign().
 // It will panic if len(sig) is not SignatureSize.
 func ExtractPublicKey(message, sig []byte) (PublicKey, error) {
-
 	if l := len(sig); l != SignatureSize || sig[63]&224 != 0 {
 		return nil, errors.New("ed25519: bad signature format")
 	}
