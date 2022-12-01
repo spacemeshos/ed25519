@@ -1,8 +1,6 @@
 # ed25519
 
-A drop-in replacement for `golang/crypto/ed25519` ([godoc](https://godoc.org/golang.org/x/crypto/ed25519),
-[github](https://github.com/golang/crypto/tree/master/ed25519))
- with additional functionality. Uses SHA-512 and ECDSA signing algorithm.
+A drop-in replacement for `crypto/ed25519` ([godoc](https://godoc.org/golang.org/x/crypto/ed25519), [github](https://github.com/golang/crypto/tree/master/ed25519)) with additional functionality. Uses SHA-512 and ECDSA signing algorithm.
 
 ## Motivation
 
@@ -14,7 +12,7 @@ In order to verify the validity of a given signature, the validator should posse
 import "github.com/spacemeshos/ed25519"
 ```
 
-Import package `ed25519` from `github.com/spacemeshos/ed25519` instead of `golang.org/x/crypto/ed25519`.
+Import package `ed25519` from `github.com/spacemeshos/ed25519` instead of `crypto/ed25519`.
 
 ## Sign2
 
