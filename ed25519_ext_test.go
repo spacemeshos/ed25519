@@ -12,8 +12,7 @@ import (
 
 // Test with a fixed message
 func TestPublicKeyExtraction(t *testing.T) {
-	var zero zeroReader
-	public, private, err := GenerateKey(zero)
+	public, private, err := GenerateKey(nil)
 	require.NoError(t, err)
 
 	// sign the message
@@ -38,8 +37,7 @@ func TestPublicKeyExtraction(t *testing.T) {
 
 // Test with a random message
 func TestPublicKeyExtraction1(t *testing.T) {
-	var zero zeroReader
-	public, private, err := GenerateKey(zero)
+	public, private, err := GenerateKey(nil)
 	require.NoError(t, err)
 
 	// sign the message
@@ -64,8 +62,7 @@ func TestPublicKeyExtraction1(t *testing.T) {
 
 // Test Verify2 with a fixed message
 func TestSignVerify2(t *testing.T) {
-	var zero zeroReader
-	public, private, err := GenerateKey(zero)
+	public, private, err := GenerateKey(nil)
 	require.NoError(t, err)
 
 	// sign and verify a message using the public key created by GenerateKey()
@@ -80,8 +77,7 @@ func TestSignVerify2(t *testing.T) {
 
 // Test Verify2 with a random message
 func TestSignVerify2Random(t *testing.T) {
-	var zero zeroReader
-	public, private, err := GenerateKey(zero)
+	public, private, err := GenerateKey(nil)
 	require.NoError(t, err)
 
 	// sign and verify a message using the public key created by GenerateKey()
@@ -95,8 +91,7 @@ func TestSignVerify2Random(t *testing.T) {
 }
 
 func BenchmarkPublicKeyExtraction(b *testing.B) {
-	var zero zeroReader
-	_, priv, err := GenerateKey(zero)
+	_, priv, err := GenerateKey(nil)
 	require.NoError(b, err)
 
 	message := []byte("Hello, world!")
@@ -109,8 +104,7 @@ func BenchmarkPublicKeyExtraction(b *testing.B) {
 }
 
 func BenchmarkSigningExt(b *testing.B) {
-	var zero zeroReader
-	_, priv, err := GenerateKey(zero)
+	_, priv, err := GenerateKey(nil)
 	require.NoError(b, err)
 
 	message := []byte("Hello, world!")
@@ -121,8 +115,7 @@ func BenchmarkSigningExt(b *testing.B) {
 }
 
 func BenchmarkVerificationExt(b *testing.B) {
-	var zero zeroReader
-	pub, priv, err := GenerateKey(zero)
+	pub, priv, err := GenerateKey(nil)
 	require.NoError(b, err)
 
 	message := []byte("Hello, world!")

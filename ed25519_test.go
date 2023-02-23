@@ -2,18 +2,8 @@ package ed25519
 
 import "testing"
 
-type zeroReader struct{}
-
-func (zeroReader) Read(buf []byte) (int, error) {
-	for i := range buf {
-		buf[i] = 0
-	}
-	return len(buf), nil
-}
-
 func BenchmarkSigning(b *testing.B) {
-	var zero zeroReader
-	_, priv, err := GenerateKey(zero)
+	_, priv, err := GenerateKey(nil)
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -25,8 +15,7 @@ func BenchmarkSigning(b *testing.B) {
 }
 
 func BenchmarkVerification(b *testing.B) {
-	var zero zeroReader
-	pub, priv, err := GenerateKey(zero)
+	pub, priv, err := GenerateKey(nil)
 	if err != nil {
 		b.Fatal(err)
 	}
