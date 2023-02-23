@@ -54,10 +54,9 @@ func extractPublicKey(publicKey, message, sig []byte) error {
 	AK := (&edwards25519.Point{}).Add(minusR, (&edwards25519.Point{}).ScalarBaseMult(S))
 
 	// Compute the inverse of k
-	var kInv edwards25519.Scalar
-	edwards25519.InvertModL(&kInv, k)
+	kInv := edwards25519.NewScalar().InvertModL(k)
 
-	A := (&edwards25519.Point{}).ScalarMult(&kInv, AK)
+	A := (&edwards25519.Point{}).ScalarMult(kInv, AK)
 	copy(publicKey, A.Bytes())
 	return nil
 }

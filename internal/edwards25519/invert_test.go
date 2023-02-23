@@ -16,70 +16,66 @@ const INV_2 = "36185027886661311069865932815214971204285581796899538030009754691
 const INV_17 = "851412420862619083996845478005058145983190159927047953647288345680641676587"
 
 func BenchmarkInvertModL(b *testing.B) {
-	var xInv Scalar
 	xBytes := make([]byte, 32)
 	xBytes[0] = byte(2)
 	x, err := NewScalar().SetBytesWithClamping(xBytes)
 	require.NoError(b, err, "failed to set bytes")
 
+	xInv := NewScalar()
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		InvertModL(&xInv, x)
+		xInv.InvertModL(x)
 	}
 }
 
 func TestInvertModLOne(t *testing.T) {
-	var xInv Scalar
 	xBytes := make([]byte, 32)
 	xBytes[0] = byte(1)
 	x, err := NewScalar().SetCanonicalBytes(xBytes)
 	require.NoError(t, err, "failed to set bytes")
 
-	InvertModL(&xInv, x)
+	xInv := NewScalar().InvertModL(x)
 	require.Equal(t, big.NewInt(1), toInt(xInv.Bytes()))
 
-	x.Multiply(x, &xInv)
+	x.Multiply(x, xInv)
 	outVal := toInt(x.Bytes())
 	require.Equal(t, big.NewInt(1), outVal, "expected 1 * 1 == 1")
 }
 
 func TestInvertModL2(t *testing.T) {
-	var xInv Scalar
 	xBytes := make([]byte, 32)
 	xBytes[0] = byte(2)
 	x, err := NewScalar().SetCanonicalBytes(xBytes)
 	require.NoError(t, err, "failed to set bytes")
 
-	InvertModL(&xInv, x)
+	xInv := NewScalar().InvertModL(x)
 	require.Equal(t, INV_2, toInt(xInv.Bytes()).String())
 
-	x.Multiply(x, &xInv)
+	x.Multiply(x, xInv)
 	require.Equal(t, big.NewInt(1), toInt(x.Bytes()), "expected x * xInv == 1")
 }
 
 func TestInvertModL17(t *testing.T) {
-	var xInv Scalar
 	xBytes := make([]byte, 32)
 	xBytes[0] = byte(17)
 	x, err := NewScalar().SetCanonicalBytes(xBytes)
 	require.NoError(t, err, "failed to set bytes")
 
-	InvertModL(&xInv, x)
+	xInv := NewScalar().InvertModL(x)
 	require.Equal(t, INV_17, toInt(xInv.Bytes()).String())
 
-	x.Multiply(x, &xInv)
+	x.Multiply(x, xInv)
 	outVal := toInt(x.Bytes()).String()
 	require.Equal(t, "1", outVal, "expected x * xInv == 1")
 }
 
 func TestInvertModLRnd(testing *testing.T) {
-	var tinv, out Scalar
 	for i := 1; i < 100; i++ {
 		t, err := NewScalar().SetUniformBytes(rnd64Bytes(testing))
 		require.NoError(testing, err, "failed to set bytes")
 
-		InvertModL(&tinv, t)
-		out.Multiply(t, &tinv)
+		tinv := NewScalar().InvertModL(t)
+		out := NewScalar().Multiply(t, tinv)
 		require.Equal(testing, big.NewInt(1), toInt(out.Bytes()), "expected t * tinv to equal 1")
 	}
 }
