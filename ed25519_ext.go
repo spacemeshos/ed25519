@@ -43,20 +43,20 @@ func extractPublicKey(publicKey, message, sig []byte) error {
 		return err
 	}
 
-	// Extract R = sig[32:] as a point on the curve (and compute the inverse of R)
 	R, err := (&edwards25519.Point{}).SetBytes(sig[:32])
 	if err != nil {
 		return err
 	}
 
-	// [S]B = R + [k]A --> A = (-R + [S]B)/[k]
+	// [S]B = R + [k]A --> [k]A = -R + [S]B
 	minusR := (&edwards25519.Point{}).Negate(R)
-	AK := (&edwards25519.Point{}).Add(minusR, (&edwards25519.Point{}).ScalarBaseMult(S))
+	KA := (&edwards25519.Point{}).Add(minusR, (&edwards25519.Point{}).ScalarBaseMult(S))
 
-	// Compute the inverse of k
+	// compute 1 / [k]
 	kInv := edwards25519.NewScalar().InvertModL(k)
 
-	A := (&edwards25519.Point{}).ScalarMult(kInv, AK)
+	// A = (1 / [k]) * [k]A
+	A := (&edwards25519.Point{}).ScalarMult(kInv, KA)
 	copy(publicKey, A.Bytes())
 	return nil
 }
