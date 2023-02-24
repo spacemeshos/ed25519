@@ -6,6 +6,7 @@ package ed25519
 import (
 	"bytes"
 	"crypto/sha512"
+	"encoding/binary"
 	"errors"
 	"strconv"
 
@@ -61,6 +62,22 @@ func extractPublicKey(publicKey, message, sig []byte) error {
 	A := (&edwards25519.Point{}).ScalarMult(kInv, KA)
 	copy(publicKey, A.Bytes())
 	return nil
+}
+
+// NewDerivedKeyFromSeed calculates a private key from a 32 bytes random seed, an integer index and salt
+func NewDerivedKeyFromSeed(seed []byte, index uint64, salt []byte) PrivateKey {
+	if l := len(seed); l != SeedSize {
+		panic("ed25519: bad seed length: " + strconv.Itoa(l))
+	}
+
+	digest := sha512.New()
+	digest.Write(seed)
+	digest.Write(salt)
+	buf := make([]byte, 8)
+	binary.LittleEndian.PutUint64(buf, index)
+	digest.Write(buf)
+
+	return NewKeyFromSeed(digest.Sum(nil)[:SeedSize])
 }
 
 // Sign2 signs the message with privateKey and returns a signature.
