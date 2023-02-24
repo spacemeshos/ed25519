@@ -47,15 +47,3 @@ func GenerateKey(rand io.Reader) (PublicKey, PrivateKey, error) {
 func NewKeyFromSeed(seed []byte) PrivateKey {
 	return ed25519.NewKeyFromSeed(seed)
 }
-
-// Sign signs the message with privateKey and returns a signature. It will
-// panic if len(privateKey) is not PrivateKeySize.
-func Sign(privateKey PrivateKey, message []byte) []byte {
-	return ed25519.Sign(privateKey, message)
-}
-
-// Verify reports whether sig is a valid signature of message by publicKey. It
-// will panic if len(publicKey) is not PublicKeySize.
-func Verify(publicKey PublicKey, message, sig []byte) bool {
-	return ed25519.Verify(publicKey, message, sig)
-}

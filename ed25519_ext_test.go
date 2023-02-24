@@ -12,7 +12,7 @@ import (
 
 // Test with a fixed message
 func TestPublicKeyExtraction(t *testing.T) {
-	public, private, err := GenerateKey(nil)
+	public, private, err := GenerateKey(zeroReader{})
 	require.NoError(t, err)
 
 	// sign the message
@@ -37,7 +37,7 @@ func TestPublicKeyExtraction(t *testing.T) {
 
 // Test with a random message
 func TestPublicKeyExtraction1(t *testing.T) {
-	public, private, err := GenerateKey(nil)
+	public, private, err := GenerateKey(zeroReader{})
 	require.NoError(t, err)
 
 	// sign the message
@@ -62,7 +62,7 @@ func TestPublicKeyExtraction1(t *testing.T) {
 
 // Test Verify2 with a fixed message
 func TestSignVerify2(t *testing.T) {
-	public, private, err := GenerateKey(nil)
+	public, private, err := GenerateKey(zeroReader{})
 	require.NoError(t, err)
 
 	// sign and verify a message using the public key created by GenerateKey()
@@ -77,7 +77,7 @@ func TestSignVerify2(t *testing.T) {
 
 // Test Verify2 with a random message
 func TestSignVerify2Random(t *testing.T) {
-	public, private, err := GenerateKey(nil)
+	public, private, err := GenerateKey(zeroReader{})
 	require.NoError(t, err)
 
 	// sign and verify a message using the public key created by GenerateKey()
@@ -91,7 +91,7 @@ func TestSignVerify2Random(t *testing.T) {
 }
 
 func BenchmarkPublicKeyExtraction(b *testing.B) {
-	_, priv, err := GenerateKey(nil)
+	_, priv, err := GenerateKey(zeroReader{})
 	require.NoError(b, err)
 
 	message := []byte("Hello, world!")
@@ -104,7 +104,7 @@ func BenchmarkPublicKeyExtraction(b *testing.B) {
 }
 
 func BenchmarkSigningExt(b *testing.B) {
-	_, priv, err := GenerateKey(nil)
+	_, priv, err := GenerateKey(zeroReader{})
 	require.NoError(b, err)
 
 	message := []byte("Hello, world!")
