@@ -4,153 +4,195 @@
 package ed25519
 
 import (
-	"bytes"
-	"crypto/rand"
+	"encoding/csv"
 	"encoding/hex"
+	"fmt"
+	"io"
+	"math/rand"
+	"os"
+	"os/exec"
+	"path/filepath"
+	"strings"
 	"testing"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-// Test with a fixed message
 func TestPublicKeyExtraction(t *testing.T) {
-	var zero zeroReader
-	public, private, _ := GenerateKey(zero)
-	message := []byte("test message")
+	public, private, err := GenerateKey(zeroReader{})
+	require.NoError(t, err)
 
 	// sign the message
+	message := []byte("test message")
 	sig := Sign2(private, message)
 
 	// extract public key from signature and the message
 	public1, err := ExtractPublicKey(message, sig)
+	require.NoError(t, err)
 
 	// ensure extracted key is the same as public key created by GenerateKey()
-	assert.NoError(t, err)
-	assert.EqualValues(t, public, public1, "expected same public key")
+	require.EqualValues(t, public, public1, "expected same public key")
 
 	// attempt to extract the public key from the same sig but a wrong message
 	wrongMessage := []byte("wrong message")
 	public2, err := ExtractPublicKey(wrongMessage, sig)
+	require.NoError(t, err)
 
 	// we expect the extracted key to not be the same as the correct signer public key
-	assert.NoError(t, err)
-	if bytes.Compare(public, public2) == 0 {
-		t.Errorf("expected different public keys")
-	}
+	require.NotEqual(t, public, public2, "expected different public keys")
 }
 
-// Test with a random message
-func TestPublicKeyExtraction1(t *testing.T) {
-	var zero zeroReader
-	public, private, _ := GenerateKey(zero)
-
-	message := rnd32Bytes(t)
-
-	// sign the message
-	sig := Sign2(private, message[:])
-
-	// extract public key from signature and the message
-	public1, err := ExtractPublicKey(message[:], sig)
-
-	// ensure extracted key is the same as public key created by GenerateKey()
-	assert.NoError(t, err)
-	assert.EqualValues(t, public, public1, "expected same public key")
-
-	// attempt to extract the public key from the same sig but a wrong message
-
-	wrongMessage := rnd32Bytes(t)
-	public2, err := ExtractPublicKey(wrongMessage[:], sig)
-
-	// we expect the extracted key to not be the same as the correct signer public key
-	assert.NoError(t, err)
-	if bytes.Compare(public, public2) == 0 {
-		t.Errorf("expected different public keys")
-	}
-}
-
-// Test Verify2 with a fixed message
 func TestSignVerify2(t *testing.T) {
-	var zero zeroReader
-	public, private, _ := GenerateKey(zero)
-
-	message := []byte("test message")
+	public, private, err := GenerateKey(zeroReader{})
+	require.NoError(t, err)
 
 	// sign and verify a message using the public key created by GenerateKey()
+	message := []byte("test message")
 	sig := Sign2(private, message)
-	if !Verify2(public, message, sig) {
-		t.Errorf("valid signature rejected")
-	}
+	require.True(t, Verify2(public, message, sig), "valid signature rejected")
 
 	// Verification of the signature on a wrong message should fail
 	wrongMessage := []byte("wrong message")
-	if Verify2(public, wrongMessage, sig) {
-		t.Errorf("signature of different message accepted")
-	}
+	require.False(t, Verify2(public, wrongMessage, sig), "signature of different message accepted")
 }
 
 func TestDerive(t *testing.T) {
-	seed := rnd32Bytes(t)
-	var idx uint64 = 5
-	salt := []byte("Spacemesh rocks")
-	_ = NewDerivedKeyFromSeed(seed[:], idx, salt)
-}
-
-func TestDerive1(t *testing.T) {
 	const expectedEncodedKey = "b6e1caa7ed8fb8b517dbbd5a49f7c9e76f33f0dd74100396207b640479d6fade2b0f080a354fd3c981630efe75bcbc5f4134895b749364f25badeae5a687950c"
 	const s = "8d03a58456bb1b45f696032444b09d476fa5406f998ed0a50e694ee8a40cfb09"
 	seed, err := hex.DecodeString(s)
-	if err != nil {
-		t.Fatal(err)
-	}
+	require.NoError(t, err)
 
-	privateKey1 := NewDerivedKeyFromSeed(seed[:], 5, []byte("Spacemesh rocks"))
-	dst := make([]byte, hex.EncodedLen(len(privateKey1)))
-	hex.Encode(dst, privateKey1)
-	if string(dst) != expectedEncodedKey {
-		t.Errorf("Unexpected key")
-	}
-}
-
-// Test Verify2 with a random message
-func TestSignVerify3(t *testing.T) {
-	var zero zeroReader
-	public, private, _ := GenerateKey(zero)
-
-	message := rnd32Bytes(t)
-
-	// sign and verify a message using the public key created by GenerateKey()
-	sig := Sign2(private, message[:])
-	if !Verify2(public, message[:], sig) {
-		t.Errorf("valid signature rejected")
-	}
-
-	// Verification of the signature on a wrong message should fail
-	wrongMessage := rnd32Bytes(t)
-	if Verify2(public, wrongMessage[:], sig) {
-		t.Errorf("signature of different message accepted")
-	}
+	privateKey1 := NewDerivedKeyFromSeed(seed, 5, []byte("Spacemesh rocks"))
+	require.Equal(t, expectedEncodedKey, hex.EncodeToString(privateKey1), "Unexpected key")
 }
 
 func BenchmarkPublicKeyExtraction(b *testing.B) {
-	var zero zeroReader
-	_, priv, err := GenerateKey(zero)
-	if err != nil {
-		b.Fatal(err)
-	}
+	_, priv, err := GenerateKey(zeroReader{})
+	require.NoError(b, err)
+
 	message := []byte("Hello, world!")
 	sig := Sign2(priv, message)
+
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = ExtractPublicKey(message, sig)
+		ExtractPublicKey(message, sig)
 	}
 }
 
-func BenchmarkSigningExt(b *testing.B) {
-	var zero zeroReader
-	_, priv, err := GenerateKey(zero)
-	if err != nil {
-		b.Fatal(err)
+func Test_PythonReference(t *testing.T) {
+	file, err := os.Open(filepath.Join("reference", "testdata.csv"))
+	require.NoError(t, err)
+	defer file.Close()
+
+	// read csv line by line
+	reader := csv.NewReader(file)
+	reader.Read() // skip header
+
+	for i := 0; ; i++ {
+		line, err := reader.Read()
+		if err != nil {
+			require.Equal(t, io.EOF, err)
+			require.Equal(t, 1000, i, "expected 1000 test vectors")
+			break
+		}
+
+		// parse line
+		pk, err := hex.DecodeString(line[0])
+		require.NoError(t, err)
+		seed, err := hex.DecodeString(line[1])
+		require.NoError(t, err)
+		msg, err := hex.DecodeString(line[2])
+		require.NoError(t, err)
+		sig, err := hex.DecodeString(line[3])
+		require.NoError(t, err)
+
+		// derive key from seed
+		key := NewKeyFromSeed(seed)
+		require.EqualValues(t, pk, key.Public(), "public key mismatch at record %d: %v", i, line)
+		require.IsType(t, PublicKey{}, key.Public(), "key type mismatch at record %d: %v", i, line)
+
+		// sign message
+		signature := Sign2(key, msg)
+		require.Equal(t, sig, signature, "signature mismatch at record %d: %v", i, line)
+
+		// verify signature
+		valid := Verify2(key.Public().(PublicKey), msg, signature)
+		require.True(t, valid, "signature verification failed at record %d: %v", i, line)
+
+		// extract public key from signature
+		public, err := ExtractPublicKey(msg, signature)
+		require.NoError(t, err)
+		require.EqualValues(t, pk, public, "public key mismatch at record %d: %v", i, line)
 	}
+}
+
+func Fuzz_ExtractPublicKey(f *testing.F) {
+	f.Add([]byte("Hello, world!"), int64(0))
+	f.Fuzz(func(t *testing.T, msg []byte, rndSeed int64) {
+		src := rand.New(rand.NewSource(rndSeed))
+		seed := make([]byte, 32)
+
+		// generate random seed
+		_, err := src.Read(seed)
+		require.NoError(t, err, "failed to read random seed")
+
+		// derive key from seed and sign
+		key := NewKeyFromSeed(seed)
+		sig, err := pySign(msg, key.Seed())
+		require.NoError(t, err)
+
+		// extract public key from signature
+		pub, err := ExtractPublicKey(msg, sig)
+		require.NoError(t, err)
+		require.EqualValues(t, key.Public(), pub)
+	})
+}
+
+func Fuzz_Sign2(f *testing.F) {
+	f.Add([]byte("Hello, world!"), int64(0))
+	f.Fuzz(func(t *testing.T, msg []byte, rndSeed int64) {
+		src := rand.New(rand.NewSource(rndSeed))
+		seed := make([]byte, 32)
+
+		// generate random seed
+		_, err := src.Read(seed)
+		require.NoError(t, err, "failed to read random seed")
+
+		// derive key from seed and sign
+		key := NewKeyFromSeed(seed)
+		sig := Sign2(key, msg)
+
+		// extract public key from signature
+		pub, err := pyExtract(msg, sig)
+		require.NoError(t, err)
+		require.EqualValues(t, key.Public(), pub)
+	})
+}
+
+func Fuzz_Derive(f *testing.F) {
+	f.Add(int64(0), []byte("Spacemesh rocks"), uint64(5))
+	f.Fuzz(func(t *testing.T, rndSeed int64, salt []byte, index uint64) {
+		src := rand.New(rand.NewSource(rndSeed))
+		seed := make([]byte, 32)
+
+		// generate random seed
+		_, err := src.Read(seed)
+		require.NoError(t, err, "failed to read random seed")
+
+		// derive key from seed
+		goKey := NewDerivedKeyFromSeed(seed, index, salt)
+		pyKey, err := pyDerive(seed, salt, index)
+		require.NoError(t, err)
+
+		// compare keys
+		require.EqualValues(t, pyKey, goKey.Seed())
+	})
+}
+
+func BenchmarkSigningExt(b *testing.B) {
+	_, priv, err := GenerateKey(zeroReader{})
+	require.NoError(b, err)
+
 	message := []byte("Hello, world!")
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
@@ -159,11 +201,9 @@ func BenchmarkSigningExt(b *testing.B) {
 }
 
 func BenchmarkVerificationExt(b *testing.B) {
-	var zero zeroReader
-	pub, priv, err := GenerateKey(zero)
-	if err != nil {
-		b.Fatal(err)
-	}
+	pub, priv, err := GenerateKey(nil)
+	require.NoError(b, err)
+
 	message := []byte("Hello, world!")
 	signature := Sign2(priv, message)
 	b.ResetTimer()
@@ -172,10 +212,56 @@ func BenchmarkVerificationExt(b *testing.B) {
 	}
 }
 
-func rnd32Bytes(t *testing.T) *[32]byte {
-	var d [32]byte
-	n, err := rand.Read(d[:])
-	assert.NoError(t, err, "no system entropy")
-	assert.Equal(t, 32, n, "expected 32 bytes of entropy")
-	return &d
+func pySign(msg []byte, seed PrivateKey) ([]byte, error) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	py := fmt.Sprintf("'import ed25519_ref; ed25519_ref.go_sign2(\"%s\", \"%s\")'", hex.EncodeToString(msg), hex.EncodeToString(seed))
+	cmd := exec.Command("bash", "-c", "python3 -c "+py)
+	cmd.Dir = filepath.Join(pwd, "reference")
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("python command failed: %w", err)
+	}
+
+	return hex.DecodeString(strings.TrimSpace(string(out)))
+}
+
+func pyExtract(msg []byte, sig []byte) ([]byte, error) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	py := fmt.Sprintf("'import ed25519_ref; ed25519_ref.go_extract_pk(\"%s\", \"%s\")'", hex.EncodeToString(sig), hex.EncodeToString(msg))
+	cmd := exec.Command("bash", "-c", "python3 -c "+py)
+	cmd.Dir = filepath.Join(pwd, "reference")
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("python command failed: %w", err)
+	}
+
+	return hex.DecodeString(strings.TrimSpace(string(out)))
+}
+
+func pyDerive(seed PrivateKey, salt []byte, index uint64) ([]byte, error) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	py := fmt.Sprintf("'import ed25519_ref; ed25519_ref.go_derive(\"%s\", \"%s\", %d)'", hex.EncodeToString(seed), hex.EncodeToString(salt), index)
+	cmd := exec.Command("bash", "-c", "python3 -c "+py)
+	cmd.Dir = filepath.Join(pwd, "reference")
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("python command failed: %w", err)
+	}
+
+	return hex.DecodeString(strings.TrimSpace(string(out)))
 }

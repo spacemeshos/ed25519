@@ -21,7 +21,25 @@ jobs:
         with:
           go-version: ${{ env.go-version }}
 
+      - name: setup python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+          cache: "pip" # caching pip dependencies
+
       - name: build
         run: go build -v ./...
+
+      - name: generate test vectors
+        run: |
+          cd reference
+          pip install -r ./requirements.txt
+          python ./ed25519_ref.py
+      - name: archive test vectors
+        uses: actions/upload-artifact@v3
+        with:
+          name: my-artifact
+          path: reference/testdata.csv
+
       - name: go test
         run: go test -v ./...
