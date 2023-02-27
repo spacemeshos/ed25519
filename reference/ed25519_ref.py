@@ -92,6 +92,8 @@ def check_pk(pk, ext_pk):
     if A != ext_pk:
         raise Exception("wrong public key extracted")
 
+# *************************  main  **************************
+
 
 if __name__ == '__main__':
     header = ['pk', 'seed', 'm', 's']
@@ -106,3 +108,19 @@ if __name__ == '__main__':
             m = os.urandom(32)
             s = sign2(m, seed)
             writer.writerow([pk.hex(), seed.hex(), m.hex(), s.hex()])
+
+# **************************  go  ***************************
+
+
+def go_sign2(msg, key):
+    m = bytes.fromhex(msg)
+    sk = bytes.fromhex(key)
+    sig = sign2(m, sk)
+    print(sig.hex())
+
+
+def go_extract_pk(s, msg):
+    sig = bytes.fromhex(s)
+    m = bytes.fromhex(msg)
+    ext_pk = extract_pk(sig, m)
+    print(ext_pk.to_bytes().hex())

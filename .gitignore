@@ -14,5 +14,8 @@
 .DS_Store
 .idea/
 
+# Python files
+__pycache__/
+
 # file is regenerated on every testrun
 reference/testdata.csv

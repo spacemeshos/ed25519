@@ -4,12 +4,15 @@
 package ed25519
 
 import (
-	"crypto/rand"
 	"encoding/csv"
 	"encoding/hex"
+	"fmt"
 	"io"
+	"math/rand"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -172,6 +175,49 @@ func Test_PythonReference(t *testing.T) {
 	}
 }
 
+func Fuzz_ExtractPublicKey(f *testing.F) {
+	f.Add([]byte("Hello, world!"), int64(0))
+	f.Fuzz(func(t *testing.T, msg []byte, rndSeed int64) {
+		src := rand.New(rand.NewSource(rndSeed))
+		seed := make([]byte, 32)
+
+		// generate random seed
+		_, err := src.Read(seed)
+		require.NoError(t, err, "failed to read random seed")
+
+		// derive key from seed and sign
+		key := NewKeyFromSeed(seed)
+		sig, err := pySign(msg, key.Seed())
+		require.NoError(t, err)
+
+		// extract public key from signature
+		pub, err := ExtractPublicKey(msg, sig)
+		require.NoError(t, err)
+		require.EqualValues(t, key.Public(), pub)
+	})
+}
+
+func Fuzz_Sign2(f *testing.F) {
+	f.Add([]byte("Hello, world!"), int64(0))
+	f.Fuzz(func(t *testing.T, msg []byte, rndSeed int64) {
+		src := rand.New(rand.NewSource(rndSeed))
+		seed := make([]byte, 32)
+
+		// generate random seed
+		_, err := src.Read(seed)
+		require.NoError(t, err, "failed to read random seed")
+
+		// derive key from seed and sign
+		key := NewKeyFromSeed(seed)
+		sig := Sign2(key, msg)
+
+		// extract public key from signature
+		pub, err := pyExtract(msg, sig)
+		require.NoError(t, err)
+		require.EqualValues(t, key.Public(), pub)
+	})
+}
+
 func BenchmarkSigningExt(b *testing.B) {
 	_, priv, err := GenerateKey(zeroReader{})
 	require.NoError(b, err)
@@ -201,4 +247,40 @@ func rnd32Bytes(t *testing.T) []byte {
 	require.NoError(t, err, "no system entropy")
 	require.Equal(t, 32, n, "expected 32 bytes of entropy")
 	return d
+}
+
+func pySign(msg []byte, seed PrivateKey) ([]byte, error) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	py := fmt.Sprintf("'import ed25519_ref; ed25519_ref.go_sign2(\"%s\", \"%s\")'", hex.EncodeToString(msg), hex.EncodeToString(seed))
+	cmd := exec.Command("bash", "-c", "python3 -c "+py)
+	cmd.Dir = filepath.Join(pwd, "reference")
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("python command failed: %w", err)
+	}
+
+	return hex.DecodeString(strings.TrimSpace(string(out)))
+}
+
+func pyExtract(msg []byte, sig []byte) ([]byte, error) {
+	pwd, err := os.Getwd()
+	if err != nil {
+		return nil, err
+	}
+
+	py := fmt.Sprintf("'import ed25519_ref; ed25519_ref.go_extract_pk(\"%s\", \"%s\")'", hex.EncodeToString(sig), hex.EncodeToString(msg))
+	cmd := exec.Command("bash", "-c", "python3 -c "+py)
+	cmd.Dir = filepath.Join(pwd, "reference")
+
+	out, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, fmt.Errorf("python command failed: %w", err)
+	}
+
+	return hex.DecodeString(strings.TrimSpace(string(out)))
 }
