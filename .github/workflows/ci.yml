@@ -32,8 +32,9 @@ jobs:
 
       - name: generate test vectors
         run: |
-          pip install -r ./reference/requirements.txt
-          python ./reference/ed25519_ref.py
+          cd reference
+          pip install -r ./requirements.txt
+          python ./ed25519_ref.py
       - name: archive test vectors
         uses: actions/upload-artifact@v3
         with:

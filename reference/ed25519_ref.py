@@ -100,7 +100,7 @@ if __name__ == '__main__':
         writer = csv.writer(f)
         writer.writerow(header)
 
-        for i in range(0, 10000):
+        for i in range(0, 1000):
             seed = os.urandom(32)
             pk = public_key(seed)
             m = os.urandom(32)
