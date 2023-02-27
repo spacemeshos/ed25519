@@ -4,13 +4,11 @@
 package ed25519
 
 import (
-	"crypto/ed25519"
 	"crypto/rand"
 	"encoding/csv"
 	"encoding/hex"
 	"io"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"testing"
 
@@ -128,10 +126,6 @@ func BenchmarkPublicKeyExtraction(b *testing.B) {
 }
 
 func Test_PythonReference(t *testing.T) {
-	cmd := exec.Command("python3", "ed25519_ref.py")
-	cmd.Dir = "reference"
-	require.NoError(t, cmd.Run())
-
 	file, err := os.Open(filepath.Join("reference", "testdata.csv"))
 	require.NoError(t, err)
 	defer file.Close()
@@ -159,16 +153,16 @@ func Test_PythonReference(t *testing.T) {
 		require.NoError(t, err)
 
 		// derive key from seed
-		key := ed25519.NewKeyFromSeed(seed)
+		key := NewKeyFromSeed(seed)
 		require.EqualValues(t, pk, key.Public(), "public key mismatch at record %d: %v", i, line)
-		require.IsType(t, ed25519.PublicKey{}, key.Public(), "key type mismatch at record %d: %v", i, line)
+		require.IsType(t, PublicKey{}, key.Public(), "key type mismatch at record %d: %v", i, line)
 
 		// sign message
 		signature := Sign2(key, msg)
 		require.Equal(t, sig, signature, "signature mismatch at record %d: %v", i, line)
 
 		// verify signature
-		valid := Verify2(key.Public().(ed25519.PublicKey), msg, signature)
+		valid := Verify2(key.Public().(PublicKey), msg, signature)
 		require.True(t, valid, "signature verification failed at record %d: %v", i, line)
 
 		// extract public key from signature
