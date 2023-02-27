@@ -59,6 +59,12 @@ def inv2(x):
     return pow(x, L-2, L)
 
 
+def derive_key(sk, salt, index):
+    assert len(sk) == 32  # seed
+
+    return H(sk[:32] + salt + index.to_bytes(8, byteorder='little'))[:32]
+
+
 def sign2(m, sk):
     assert len(sk) == 32
     h = H(sk[:32])
@@ -112,15 +118,23 @@ if __name__ == '__main__':
 # **************************  go  ***************************
 
 
-def go_sign2(msg, key):
+def go_sign2(msg, sk):
     m = bytes.fromhex(msg)
-    sk = bytes.fromhex(key)
+    sk = bytes.fromhex(sk)
     sig = sign2(m, sk)
     print(sig.hex())
 
 
 def go_extract_pk(s, msg):
-    sig = bytes.fromhex(s)
+    s = bytes.fromhex(s)
     m = bytes.fromhex(msg)
-    ext_pk = extract_pk(sig, m)
+    ext_pk = extract_pk(s, m)
     print(ext_pk.to_bytes().hex())
+
+
+def go_derive(sk, salt, index):
+    sk = bytes.fromhex(sk)
+    salt = bytes.fromhex(salt)
+    index = int(index)
+    dk = derive_key(sk, salt, index)
+    print(dk.hex())
