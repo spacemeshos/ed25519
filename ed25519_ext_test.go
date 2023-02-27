@@ -4,8 +4,14 @@
 package ed25519
 
 import (
+	"crypto/ed25519"
 	"crypto/rand"
+	"encoding/csv"
 	"encoding/hex"
+	"io"
+	"os"
+	"os/exec"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -118,6 +124,57 @@ func BenchmarkPublicKeyExtraction(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		ExtractPublicKey(message, sig)
+	}
+}
+
+func Test_PythonReference(t *testing.T) {
+	cmd := exec.Command("python3", "ed25519_ref.py")
+	cmd.Dir = "reference"
+	require.NoError(t, cmd.Run())
+
+	file, err := os.Open(filepath.Join("reference", "testdata.csv"))
+	require.NoError(t, err)
+	defer file.Close()
+
+	// read csv line by line
+	reader := csv.NewReader(file)
+	reader.Read() // skip header
+
+	for i := 0; ; i++ {
+		line, err := reader.Read()
+		if err != nil {
+			require.Equal(t, io.EOF, err)
+			require.Equal(t, 1000, i, "expected 1000 test vectors")
+			break
+		}
+
+		// parse line
+		pk, err := hex.DecodeString(line[0])
+		require.NoError(t, err)
+		seed, err := hex.DecodeString(line[1])
+		require.NoError(t, err)
+		msg, err := hex.DecodeString(line[2])
+		require.NoError(t, err)
+		sig, err := hex.DecodeString(line[3])
+		require.NoError(t, err)
+
+		// derive key from seed
+		key := ed25519.NewKeyFromSeed(seed)
+		require.EqualValues(t, pk, key.Public(), "public key mismatch at record %d: %v", i, line)
+		require.IsType(t, ed25519.PublicKey{}, key.Public(), "key type mismatch at record %d: %v", i, line)
+
+		// sign message
+		signature := Sign2(key, msg)
+		require.Equal(t, sig, signature, "signature mismatch at record %d: %v", i, line)
+
+		// verify signature
+		valid := Verify2(key.Public().(ed25519.PublicKey), msg, signature)
+		require.True(t, valid, "signature verification failed at record %d: %v", i, line)
+
+		// extract public key from signature
+		public, err := ExtractPublicKey(msg, signature)
+		require.NoError(t, err)
+		require.EqualValues(t, pk, public, "public key mismatch at record %d: %v", i, line)
 	}
 }
 

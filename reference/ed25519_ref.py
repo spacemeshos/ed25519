@@ -1,137 +1,108 @@
+from pure25519.basic import (bytes_to_clamped_scalar,
+                             bytes_to_scalar, scalar_to_bytes,
+                             bytes_to_element, Base)
 import hashlib
+import binascii
+import csv
+import os
 
-b = 256
-q = 2**255 - 19
-l = 2**252 + 27742317777372353535851937790883648493
+L = 2**252 + 27742317777372353535851937790883648493
+
 
 def H(m):
     return hashlib.sha512(m).digest()
 
-def expmod(b,e,m):
-    if e == 0: return 1
-    t = expmod(b,e/2,m)**2 % m
-    if e & 1: t = (t*b) % m
-    return t
 
-def inv(x):
-    return expmod(x,q-2,q)
+def public_key(seed):
+    # turn first half of SHA512(seed) into scalar, then into point
+    assert len(seed) == 32
+    a = bytes_to_clamped_scalar(H(seed)[:32])
+    A = Base.scalarmult(a)
+    return A.to_bytes()
 
-d = -121665 * inv(121666)
-I = expmod(2,(q-1)/4,q)
-
-def xrecover(y):
-    xx = (y*y-1) * inv(d*y*y+1)
-    x = expmod(xx,(q+3)/8,q)
-    if (x*x - xx) % q != 0: x = (x*I) % q
-    if x % 2 != 0: x = q-x
-    return x
-
-By = 4 * inv(5)
-Bx = xrecover(By)
-B = [Bx % q,By % q]
-
-def edwards(P,Q):
-    x1 = P[0]
-    y1 = P[1]
-    x2 = Q[0]
-    y2 = Q[1]
-    x3 = (x1*y2+x2*y1) * inv(1+d*x1*x2*y1*y2)
-    y3 = (y1*y2+x1*x2) * inv(1-d*x1*x2*y1*y2)
-    return [x3 % q,y3 % q]
-
-def scalarmult(P,e):
-    if e == 0: return [0,1]
-    Q = scalarmult(P,e/2)
-    Q = edwards(Q,Q)
-    if e & 1: Q = edwards(Q,P)
-    return Q
-
-def encodeint(y):
-    bits = [(y >> i) & 1 for i in range(b)]
-    return ''.join([chr(sum([bits[i * 8 + j] << j for j in range(8)])) for i in range(b/8)])
-
-def encodepoint(P):
-    x = P[0]
-    y = P[1]
-    bits = [(y >> i) & 1 for i in range(b - 1)] + [x & 1]
-    return ''.join([chr(sum([bits[i * 8 + j] << j for j in range(8)])) for i in range(b/8)])
-
-def bit(h,i):
-    return (ord(h[i/8]) >> (i%8)) & 1
-
-def publickey(sk):
-    h = H(sk)
-    a = 2**(b-2) + sum(2**i * bit(h,i) for i in range(3,b-2))
-    A = scalarmult(B,a)
-    return encodepoint(A)
 
 def Hint(m):
     h = H(m)
-    return sum(2**i * bit(h,i) for i in range(2*b))
-
-def signature(m,sk,pk):
-    h = H(sk)
-    a = 2**(b-2) + sum(2**i * bit(h,i) for i in range(3,b-2))
-    r = Hint(''.join([h[i] for i in range(b/8,b/4)]) + m)
-    R = scalarmult(B,r)
-    S = (r + Hint(encodepoint(R) + pk + m) * a) % l
-    return encodepoint(R) + encodeint(S)
-
-def isoncurve(P):
-    x = P[0]
-    y = P[1]
-    return (-x*x + y*y - 1 - d*x*x*y*y) % q == 0
-
-def decodeint(s):
-    return sum(2**i * bit(s,i) for i in range(0,b))
-
-def decodepoint(s):
-    y = sum(2**i * bit(s,i) for i in range(0,b-1))
-    x = xrecover(y)
-    if x & 1 != bit(s,b-1): x = q-x
-    P = [x,y]
-    if not isoncurve(P): raise Exception("decoding point that is not on curve")
-    return P
-
-def checkvalid(s,m,pk):
-    if len(s) != b/4: raise Exception("signature length is wrong")
-    if len(pk) != b/8: raise Exception("public-key length is wrong")
-    R = decodepoint(s[0:b/8])
-    A = decodepoint(pk)
-    S = decodeint(s[b/8:b/4])
-    h = Hint(encodepoint(R) + pk + m)
-    if scalarmult(B,S) != edwards(R,scalarmult(A,h)):
-        raise Exception("signature does not pass verification")
+    return int(binascii.hexlify(h[::-1]), 16)
 
 
-# ************** NEW PROCEDURES *************
+def sign(m, sk, pk):
+    assert len(sk) == 32  # seed
+    assert len(pk) == 32
+    h = H(sk[:32])
+    a_bytes, inter = h[:32], h[32:]
+    a = bytes_to_clamped_scalar(a_bytes)
+    r = Hint(inter + m)
+    R = Base.scalarmult(r)
+    R_bytes = R.to_bytes()
+    S = r + Hint(R_bytes + pk + m) * a
+    return R_bytes + scalar_to_bytes(S)
+
+
+def verify(s, m, pk):
+    if len(s) != 64:
+        raise Exception("signature length is wrong")
+    if len(pk) != 32:
+        raise Exception("public-key length is wrong")
+    R = bytes_to_element(s[:32])
+    A = bytes_to_element(pk)
+    S = bytes_to_scalar(s[32:])
+    h = Hint(s[:32] + pk + m)
+    v1 = Base.scalarmult(S)
+    v2 = R.add(A.scalarmult(h))
+    return v1 == v2
+
+# **************************  NEW  **************************
 
 
 def inv2(x):
-    return expmod(x,l-2,l)
+    return pow(x, L-2, L)
 
-def signature2(m,sk):
-    h = H(sk)
-    a = 2**(b-2) + sum(2**i * bit(h,i) for i in range(3,b-2))
-    r = Hint(''.join([h[i] for i in range(b/8,b/4)]) + m)
-    R = scalarmult(B,r)
-    S = (r + Hint(encodepoint(R) + m) * a) % l
-    return encodepoint(R) + encodeint(S)
 
-def extractpk(s,m):
-    if len(s) != b/4: raise Exception("signature length is wrong")
-    R = decodepoint(s[0:b/8])
-    S = decodeint(s[b/8:b/4])
-    h = Hint(encodepoint(R) + m)
+def sign2(m, sk):
+    assert len(sk) == 32
+    h = H(sk[:32])
+    a_bytes, inter = h[:32], h[32:]
+    a = bytes_to_clamped_scalar(a_bytes)
+    r = Hint(inter + m)
+    R = Base.scalarmult(r)
+    R_bytes = R.to_bytes()
+    S = r + Hint(R_bytes + m) * a
+    return R_bytes + scalar_to_bytes(S)
+
+
+def extract_pk(s, m):
+    if len(s) != 64:
+        raise Exception("signature length is wrong")
+    R = bytes_to_element(s[:32])
+    S = bytes_to_scalar(s[32:])
+    h = Hint(s[:32] + m)
     h_inv = inv2(h)
-    R_neg = [-R[0], R[1]]
-    A = scalarmult(edwards(scalarmult(B,S),R_neg),h_inv)
+    R_neg = R.scalarmult(L-1)
+    v1 = Base.scalarmult(S)
+    v2 = v1.add(R_neg)
+    A = v2.scalarmult(h_inv)
     return A
 
-def checkpk(pk,ext_pk):
-    if len(pk) != b/8: raise Exception("public-key length is wrong")
-    A = decodepoint(pk)
+
+def check_pk(pk, ext_pk):
+    if len(pk) != 32:
+        raise Exception("public-key length is wrong")
+    A = bytes_to_element(pk)
     if A != ext_pk:
         raise Exception("wrong public key extracted")
 
 
+if __name__ == '__main__':
+    header = ['pk', 'seed', 'm', 's']
+
+    with open('testdata.csv', 'w', encoding='UTF8') as f:
+        writer = csv.writer(f)
+        writer.writerow(header)
+
+        for i in range(0, 1000):
+            seed = os.urandom(32)
+            pk = public_key(seed)
+            m = os.urandom(32)
+            s = sign2(m, seed)
+            writer.writerow([pk.hex(), seed.hex(), m.hex(), s.hex()])
